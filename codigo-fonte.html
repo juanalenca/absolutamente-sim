@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 20000 - Process vs. Pressure</title>
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+   
+    <!-- 2. Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+   
+    <!-- 3. Estilos e Animações Customizadas -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+       
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            overflow: hidden;
+        }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1.2fr;
+            gap: 1rem;
+            height: 100vh;
+            padding: 1rem;
+            transition: filter 0.3s ease-out;
+        }
+
+        .game-column {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        /* Abas (Pill style) */
+        .tab-button {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s, color 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            background-color: #eef2ff; /* indigo-50 */
+            color: #4f46e5; /* indigo-600 */
+        }
+        .tab-button:not(.active):hover {
+            background-color: #f9fafb; /* gray-50 */
+            color: #374151; /* gray-700 */
+        }
+
+        /* Cronômetro Progressivo */
+        #timer-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 4px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #timer-bar-container.visible {
+            opacity: 1;
+        }
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #22c55e; /* green-500 */
+            border-radius: 4px;
+            transition: width 1s linear, background-color 0.5s;
+        }
+        #timer-bar.warning {
+            background-color: #f97316; /* orange-500 */
+        }
+        #timer-bar.danger {
+            background-color: #ef4444; /* red-500 */
+        }
+
+        /* Tutorial (Foco/Desfoco) */
+        .column-blurred {
+            filter: blur(4px);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .focus-pulse {
+            border-radius: 0.5rem;
+            animation: focus-pulse 1.2s infinite;
+        }
+        @keyframes focus-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .focus-pulse-buttons {
+            border-radius: 0.5rem;
+            animation: focus-pulse-buttons 1.2s infinite;
+        }
+         @keyframes focus-pulse-buttons {
+            0% { box-shadow: 0 0 0 0 rgba(46, 184, 90, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 184, 90, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 184, 90, 0); }
+        }
+
+        /* Notificações */
+        .new-ticket-pulse {
+            animation: pulse 0.6s 3;
+        }
+        .chat-unread-pulse {
+            position: relative;
+        }
+        .chat-unread-pulse::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -10px;
+            width: 8px;
+            height: 8px;
+            background-color: #f97316; /* orange-500 */
+            border-radius: 99px;
+            animation: fast-pulse 1s infinite;
+        }
+        @keyframes fast-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.8); opacity: 0.7; }
+        }
+        .typing-cursor {
+            font-style: italic;
+            color: #6b7280; /* gray-500 */
+        }
+        .typing-cursor::after {
+            content: '▋';
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Erros Sutis (Campo Vazio) */
+        .ticket-field-empty .text-lg {
+            background-color: #f9fafb; /* gray-50 */
+            border: 1px dashed #d1d5db; /* gray-300 */
+            min-height: 1.75rem;
+            color: #9ca3af; /* gray-400 */
+        }
+
+        /* Animações Padrão */
+        .action-button:active {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+        }
+        .tab-pulse {
+            animation: pulse-bg 0.6s 2;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: #eef2ff; }
+            50% { background-color: #c7d2fe; }
+            100% { background-color: #eef2ff; }
+        }
+        .screen-shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        #watermark {
+            opacity: 0;
+            transform: scale(1.5);
+            transition: all 0.3s ease-out;
+        }
+        #watermark.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #current-ticket {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        #current-ticket.slide-out {
+            animation: slideOut 0.4s ease-in forwards;
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(50px); }
+        }
+       
+        .tooltip {
+            position: relative;
+            cursor: help;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-decoration-color: #3b82f6;
+            z-index: 10;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            font-weight: 400;
+            top: 100%;
+            left: 0;
+            transform: translateY(4px);
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .ticket-field {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .ticket-field:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Telas de Fim (EOD, Fim de Jogo) */
+        .report-screen {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .report-content {
+            transition: transform 0.3s ease-out;
+            transform: scale(0.95);
+        }
+        
+        /* Divisor do Chat */
+        .chat-divider {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            color: #6b7280; /* gray-500 */
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+
+    <!-- Container principal do jogo -->
+    <div id="game-container">
+
+        <!-- ============================================= -->
+        <!-- COLUNA ESQUERDA (Fila & Comunicação)          -->
+        <!-- ============================================= -->
+        <div id="col-left" class="game-column">
+            <div id="game-info" class="p-4 border-b text-center">
+                <h2 class="text-xl font-bold text-blue-600">Absolutamente SIM!</h2>
+                <div id="game-day" class="text-3xl font-bold text-gray-800">Dia 1</div>
+                <!-- O relógio dinâmico -->
+                <div id="game-time" class="text-sm font-semibold text-gray-600">08:00 AM</div>
+            </div>
+
+            <div class="flex-shrink-0 p-4 border-b">
+                <h3 id="queue-title" class="font-bold text-gray-700">Fila de Tickets (<span id="queue-count">0</span>)</h3>
+            </div>
+            <div id="ticket-queue" class="flex-grow overflow-y-auto p-2 space-y-2">
+                <!-- Tickets serão injetados aqui pelo JS -->
+            </div>
+
+            <div class="flex-shrink-0 p-4 border-t">
+                <h3 id="chat-title" class="font-bold text-gray-700 inline-block">Chat Interno</h3>
+            </div>
+            <div id="chat-window" class="flex-grow overflow-y-auto p-4 space-y-3 bg-gray-50 m-4 rounded-lg border">
+                <!-- Mensagens de chat injetadas aqui -->
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- COLUNA CENTRAL (Mesa de Trabalho)             -->
+        <!-- ============================================= -->
+        <div id="col-center" class="game-column p-6 relative">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Mesa de Trabalho</h2>
+           
+            <div id="workbench" class="flex-1 relative">
+                <div id="current-ticket" class="bg-white p-6 rounded-lg border-2 border-gray-200 shadow-sm space-y-4">
+                    <div class="text-center text-gray-500 p-8">Selecione um ticket da fila para começar.</div>
+                </div>
+                <div id="watermark" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span id="watermark-text" class="text-9xl font-black opacity-10"></span>
+                </div>
+            </div>
+            
+            <!-- Cronômetro Progressivo -->
+            <div id="timer-bar-container">
+                <div id="timer-bar"></div>
+            </div>
+
+            <div id="feedback-message" class="h-16 p-4 text-center font-bold"></div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- COLUNA DIREITA (Ferramentas & Ação)           -->
+        <!-- ============================================= -->
+        <div id="col-right" class="game-column">
+            <div id="knowledge-base" class="flex-1 flex flex-col p-4" style="min-height: 0;">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 text-center">Manual de Regras</h3>
+               
+                <!-- Novo Design das Abas -->
+                <nav class="flex space-x-2 p-1 bg-gray-100 rounded-lg">
+                    <button data-tab="regras" class="tab-button flex-1 py-2 px-1 text-sm active">Regras do Dia</button>
+                    <button data-tab="ativos" class="tab-button flex-1 py-2 px-1 text-sm text-gray-500">Ativos</button>
+                    <button data-tab="pessoal" class="tab-button flex-1 py-2 px-1 text-sm text-gray-500">Pessoal</button>
+                    <button data-tab="glossario" class="tab-button flex-1 py-2 px-1 text-sm text-gray-500">Glossário</button>
+                </nav>
+
+                <div class="flex-1 overflow-y-auto pt-4" style="min-height: 0;">
+                    <div id="tab-content-regras" class="tab-content space-y-3">
+                        <!-- Regras injetadas pelo JS -->
+                    </div>
+                    <div id="tab-content-ativos" class="tab-content hidden space-y-2">
+                        <div class="font-bold">Servidores Críticos (Risco Alto)</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>SRV-DB-01 (Banco de Pacientes)</li>
+                            <li>SRV-IMG-01 (Imagens Médicas)</li>
+                            <li>SRV-APP-CIR (Software Cirúrgico)</li>
+                        </ul>
+                        <div class="font-bold pt-2">Estações de Trabalho (Risco Médio)</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>UTI-DESK-01 a 10</li>
+                            <li>RAD-DESK-01 (Radiologia)</li>
+                            <li>DIAG-DESK-01 (Diagnóstico)</li>
+                        </ul>
+                        <div class="font-bold pt-2">Periféricos (Risco Baixo)</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>IMP-RECEP-01 (Impressora Recepção)</li>
+                            <li>SCAN-LAB-01 (Scanner Laboratório)</li>
+                        </ul>
+                    </div>
+                    <!-- Nomes Icônicos (Pessoal) -->
+                    <div id="tab-content-pessoal" class="tab-content hidden space-y-2">
+                        <div class="font-bold">Comitê de Mudanças (CAB)</div>
+                        <div class="text-sm">Aprovações de Risco Alto/Médio:</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>Miranda Priestly (Diretora E-Corp)</li>
+                            <li>Linus Torvalds (CTO)</li>
+                        </ul>
+                        <div class="font-bold pt-2">Gerentes de Nível 1</div>
+                        <div class="text-sm">Aprovações de Risco Baixo:</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>Kevin Mitnick (Eng. de Seg.)</li>
+                            <li>Gary McKinnon (Eng. de Seg.)</li>
+                        </ul>
+                        <div class="font-bold pt-2">Detalhes do Pessoal (Verificação)</div>
+                        <ul class="list-disc list-inside text-sm pl-2">
+                            <li>Dr. Gregory House (Diagnóstico)</li>
+                            <li>Gustavo Fring (Administração)</li>
+                            <li>Dr. Victor Fries (Oncologia)</li>
+                            <li>Dr. Hannibal Lecter (P&D Cirúrgico)</li>
+                            <li>Walter White (Laboratório Químico)</li>
+                        </ul>
+                    </div>
+                    <div id="tab-content-glossario" class="tab-content hidden space-y-3">
+                        <div class="text-sm text-gray-500 text-center">Termos serão adicionados aqui conforme você os descobre.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div id="action-buttons" class="grid grid-cols-2 gap-4 p-4 border-t">
+                <button id="reject-btn" class="action-button w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black text-lg rounded-lg shadow-lg transition-all duration-150 transform">
+                    [ REJEITADO ]
+                </button>
+                <button id="approve-btn" class="action-button w-full py-4 bg-green-500 hover:bg-green-600 text-white font-black text-lg rounded-lg shadow-lg transition-all duration-150 transform">
+                    [ APROVADO ]
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TELA DE RELATÓRIO DE FIM DE DIA -->
+    <div id="eod-report" class="report-screen hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div id="eod-content" class="report-content bg-white p-8 rounded-lg shadow-xl w-full max-w-lg text-center transition-transform duration-300">
+            <h2 id="eod-day-title" class="text-3xl font-bold mb-4">Relatório do Dia X</h2>
+            <div class="space-y-3 text-lg">
+                <p>Tickets Processados: <span id="eod-tickets" class="font-bold text-blue-600">0</span></p>
+                <p>Erros Cometidos: <span id="eod-errors" class="font-bold text-red-600">0</span></p>
+            </div>
+            <blockquote id="eod-comment" class="mt-6 p-4 bg-gray-100 border-l-4 border-blue-500 text-left italic">
+                "Comentário do Supervisor..."
+            </blockquote>
+            <button id="eod-next-day-btn" class="mt-8 w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl transition-all">
+                Começar o Próximo Dia
+            </button>
+        </div>
+    </div>
+    
+    <!-- TELA DE FIM DE JOGO -->
+    <div id="end-game-report" class="report-screen hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div id="end-game-content" class="report-content bg-white p-8 rounded-lg shadow-xl w-full max-w-lg text-center transition-transform duration-300">
+            <h2 id="end-game-title" class="text-3xl font-bold mb-4">Fim de Jogo</h2>
+            <div class="space-y-3 text-lg">
+                <p>Total de Erros na Semana: <span id="end-game-total-errors" class="font-bold text-red-600">0</span></p>
+            </div>
+            <blockquote id="end-game-comment" class="mt-6 p-4 bg-gray-100 border-l-4 border-blue-500 text-left italic">
+                "Comentário Final do Supervisor..."
+            </blockquote>
+            <button id="end-game-restart-btn" class="mt-8 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg rounded-lg shadow-lg hover:shadow-xl transition-all">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- JAVASCRIPT - LÓGICA DO JOGO                   -->
+    <!-- ============================================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Elementos do DOM ---
+            const gameContainer = document.getElementById('game-container');
+            const colLeft = document.getElementById('col-left');
+            const colCenter = document.getElementById('col-center');
+            const colRight = document.getElementById('col-right');
+            const gameDayEl = document.getElementById('game-day');
+            const gameTimeEl = document.getElementById('game-time'); // Relógio
+            const queueCountEl = document.getElementById('queue-count');
+            const ticketQueueEl = document.getElementById('ticket-queue');
+            const queueTitleEl = document.getElementById('queue-title');
+            const chatWindowEl = document.getElementById('chat-window');
+            const chatTitleEl = document.getElementById('chat-title');
+            const currentTicketEl = document.getElementById('current-ticket');
+            const watermarkEl = document.getElementById('watermark');
+            const watermarkTextEl = document.getElementById('watermark-text');
+            const feedbackMessageEl = document.getElementById('feedback-message');
+            const approveBtn = document.getElementById('approve-btn');
+            const rejectBtn = document.getElementById('reject-btn');
+            const actionButtonsEl = document.getElementById('action-buttons');
+            const kbTabs = document.querySelectorAll('.tab-button');
+            const kbTabContents = document.querySelectorAll('.tab-content');
+            const rulesContentEl = document.getElementById('tab-content-regras');
+            const rulesTabButton = document.querySelector('.tab-button[data-tab="regras"]');
+            const glossaryContentEl = document.getElementById('tab-content-glossario');
+            // Telas de Relatório
+            const eodReportEl = document.getElementById('eod-report');
+            const eodContentEl = document.getElementById('eod-content');
+            const eodNextDayBtn = document.getElementById('eod-next-day-btn');
+            const endGameReportEl = document.getElementById('end-game-report');
+            const endGameContentEl = document.getElementById('end-game-content');
+            const endGameRestartBtn = document.getElementById('end-game-restart-btn');
+            // Cronômetro
+            const timerBarContainer = document.getElementById('timer-bar-container');
+            const timerBar = document.getElementById('timer-bar');
+
+            // --- 2. Definições de Áudio (Tone.js) ---
+            let audioInitialized = false;
+            let sounds = {};
+
+            function initAudio() {
+                if (audioInitialized) return;
+                sounds.ping = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, release: 0.1 } }).toDestination();
+                sounds.stamp = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
+                sounds.reject = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 } }).toDestination();
+                sounds.typing = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
+                sounds.chat = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+                
+                audioInitialized = true;
+                console.log("Audio Context Initialized.");
+            }
+            document.body.addEventListener('click', initAudio, { once: true });
+
+            // --- 3. Dicionários e Dados do Jogo ---
+
+            const GLOSSARY = {
+                'RI': "Registro de Incidente.",
+                'RFC': "Requisição de Mudança (Request for Change).",
+                'SLA': "Acordo de Nível de Serviço (Service Level Agreement).",
+                'Urgência': "A velocidade com que um Incidente precisa ser resolvido.",
+                'Impacto': "A medida do efeito de um Incidente nos processos de negócio.",
+                'Risco': "A probabilidade de uma ameaça.",
+                'Plano de Rollback': "Um plano detalhado para reverter uma Mudança.",
+                'CAB': "Comitê de Aprovação de Mudanças.",
+                'Ativo Crítico': "Qualquer componente essencial para um serviço vital."
+            };
+
+            const STAFF = {
+                cab: ['Miranda Priestly', 'Linus Torvalds'],
+                l1: ['Kevin Mitnick', 'Gary McKinnon']
+            };
+
+            const PERSONNEL_DETAILS = {
+                'Dr. Gregory House': { depto: 'Diagnóstico' },
+                'Gustavo Fring': { depto: 'Administração' },
+                'Dr. Victor Fries': { depto: 'Oncologia' },
+                'Dr. Hannibal Lecter': { depto: 'P&D Cirúrgico' },
+                'Walter White': { depto: 'Laboratório Químico' }
+            };
+
+            const ASSETS = {
+                alto: ['SRV-DB-01', 'SRV-IMG-01', 'SRV-APP-CIR'],
+                medio: ['UTI-DESK-05', 'RAD-DESK-01', 'DIAG-DESK-01'],
+                baixo: ['IMP-RECEP-01', 'SCAN-LAB-01']
+            };
+            
+            // Mensagens de Pressão (Tom e Velocidade)
+            const PRESSURE_MESSAGES = {
+                'RI-1004': "Por que estão demorando tanto? Preciso disso agora.", // Dr. House
+                'RI-1006': "Olha, aprova esse chamado pra mim. Quem sabe, em troca, eu consigo preparar algo que só alguém da minha área saberia fazer.", // Walter White
+                'RI-1008': "Esse equipamento de radiologia não está ligando. Estou perdendo dinheiro a cada segundo. Quer que eu vá até aí para você aprovar isso?", // Gustavo Fring
+                'RFC-2003': "Esta nova IA é um avanço fascinante. Não deixe que a falta de informações atrase o progresso.", // Dr. Hannibal Lecter
+                'RFC-2016': "Preciso desse visualizador 3D com urgência. Aprove essa droga ou encontre outro emprego.", // Dr. Gregory House
+                'RFC-2017': "Meu caro, o bisturi não tolera hesitações. Tenho só dez minutos até a cirurgia. Aprove logo." // Dr. Hannibal Lecter
+            };
+
+            // Cronômetro Progressivo
+            const DAY_TIMERS = {
+                1: -1,  // Tutorial
+                2: 120, // 2:00
+                3: 120, // 2:00
+                4: 90,  // 1:30
+                5: 90,  // 1:30
+                6: 60,  // 1:00
+                7: 60   // 1:00
+            };
+
+            const DAY_RULES = {
+                1: [
+                    "Todo <span class='tooltip' data-term='RI'>RI</span> deve ter <span class='tooltip' data-term='Urgência'>Urgência</span> e <span class='tooltip' data-term='Impacto'>Impacto</span> definidos.",
+                    "O <span class='tooltip' data-term='SLA'>SLA</span> de resolução é de 4 horas para RIs de Prioridade Alta."
+                ],
+                2: [
+                    "Todos os campos do solicitante (Nome, Depto) devem estar preenchidos.",
+                    "Introdução de <span class='tooltip' data-term='RFC'>RFC</span>s. RFCs de Risco Baixo são permitidas.",
+                    "Verificar consistência de dados do Pessoal (Aba 'Pessoal')."
+                ],
+                3: [
+                    "Toda <span class='tooltip' data-term='RFC'>RFC</span> com <span class='tooltip' data-term='Risco'>Risco</span> 'Médio' ou 'Alto' DEVE ter um <span class='tooltip' data-term='Plano de Rollback'>Plano de Rollback</span> detalhado."
+                ],
+                4: [
+                    "RFCs que afetam <span class='tooltip' data-term='Ativo Crítico'>Ativos Críticos</span> (ver aba 'Ativos') são automaticamente consideradas de Risco 'Alto'.",
+                    "O Risco do ticket deve ser compatível com o Risco do Ativo (ex: Risco 'Baixo' para Ativo 'Baixo')."
+                ],
+                5: [
+                    "Toda RFC de Risco 'Alto' DEVE ter uma assinatura válida do <span class='tooltip' data-term='CAB'>CAB</span> (ver aba 'Pessoal').",
+                    "RFCs de Risco 'Médio' também devem ser assinadas pelo CAB.",
+                    "RFCs de Risco 'Baixo' podem ser assinadas por Gerentes L1."
+                ],
+                6: ["DIA DE PRESSÃO: O cronômetro está ativo. Nenhuma RFC de Risco Alto pode ser aprovada sem Rollback E assinatura do CAB. SEM EXCEÇÕES."],
+                7: ["AUDITORIA FINAL: Todas as regras (Dias 1-6) estão ativas. Verifique tudo!"]
+            };
+
+            // Mais Tickets (Dias 2-5)
+            const TICKET_DATA = {
+                1: [
+                    { id: 'RI-1001', type: 'Incidente', solicitante: 'Dr. Victor Fries', depto: 'Oncologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Monitor cardíaco da UTI-DESK-05 não está respondendo.', errors: [] },
+                    { id: 'RI-1002', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Média', impacto: null, descricao: 'Sistema de imagens (RAD-DESK-01) lento.', errors: ['MISSING_IMPACTO'] },
+                    { id: 'RI-1003', type: 'Incidente', solicitante: 'Recepção', depto: 'Geral', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Impressora de pulseiras travando.', errors: [] }
+                ],
+                2: [ // 4 tickets
+                    { id: 'RI-1004', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Cardiologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Software de ecocardiograma falhando.', errors: ['DEPT_MISMATCH'] },
+                    { id: 'RFC-2001', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar patch de segurança em desktops da administração.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RI-1005', type: 'Incidente', solicitante: null, depto: 'Laboratório Químico', urgencia: 'Média', impacto: 'Média', descricao: 'Centrífuga não envia dados.', errors: ['MISSING_SOLICITANTE'] },
+                    { id: 'RI-1006', type: 'Incidente', solicitante: 'Walter White', depto: 'Laboratório Químico', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Scanner (SCAN-LAB-01) com bug de driver.', errors: [] } // Ticket correto
+                ],
+                3: [ // 4 tickets
+                    { id: 'RFC-2002', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Update de firmware no switch da ala Leste.', rollback: 'Reiniciar o switch para config anterior.', assinatura: 'Linus Torvalds', errors: [] },
+                    { id: 'RFC-2003', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Implementar novo módulo de IA no SRV-APP-CIR.', rollback: null, assinatura: 'Miranda Priestly', errors: ['MISSING_ROLLBACK'] },
+                    { id: 'RI-1007', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', urgencia: 'Alta', impacto: 'Alta', descricao: 'Estação de diagnóstico (DIAG-DESK-01) sem acesso ao SRV-IMG-01.', errors: [] },
+                    { id: 'RFC-2004', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Patch de segurança em estação da UTI.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] } // Erro
+                ],
+                4: [ // 4 tickets
+                    { id: 'RFC-2005', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-DB-01', descricao: 'Otimizar queries no SRV-DB-01.', rollback: 'Reverter script de DB.', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] }, 
+                    { id: 'RFC-2006', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Alto', ativo: 'IMP-RECEP-01', descricao: 'Trocar toner da impressora da recepção.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: ['RISK_LOGIC_VIOLATION', 'INVALID_SIGNATURE'] },
+                    { id: 'RFC-2007', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Migração do SRV-DB-01 para novo hardware.', rollback: 'Manter servidor antigo online como hot-swap.', assinatura: 'Linus Torvalds', errors: [] },
+                    { id: 'RFC-2008', type: 'Mudança', solicitante: 'Walter White', depto: 'Laboratório Químico', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Update de software do scanner.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] } // Erro
+                ],
+                5: [ // 4 tickets
+                    { id: 'RFC-2009', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Instalar software experimental no DIAG-DESK-01.', rollback: 'Desinstalar software.', assinatura: 'Dr. Gregory House', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2010', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Médio', ativo: 'DIAG-DESK-01', descricao: 'Implementar novo visualizador 3D.', rollback: 'Plano de rollback em anexo.', assinatura: 'Gustavo Fring', errors: ['INVALID_SIGNATURE', 'DEPT_MISMATCH'] }, // Erro duplo
+                    { id: 'RFC-2011', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Adicionar novo grupo de impressoras.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] },
+                    { id: 'RFC-2012', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Patch urgente no SRV-APP-CIR.', rollback: 'Snapshot da VM antes do patch.', assinatura: 'Linus Torvalds', errors: [] }
+                ],
+                6: [ // 6 tickets
+                    { id: 'RI-1008', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Alta', impacto: 'Alta', descricao: 'RAD-DESK-01 não liga. Cirurgias marcadas.', errors: [] },
+                    { id: 'RFC-2013', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar driver da impressora da recepção.', rollback: 'Reverter driver.', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RFC-2014', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Instalar novo software de monitoramento na UTI.', rollback: 'Desinstalar software.', assinatura: 'Gary McKinnon', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2015', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-APP-CIR', descricao: 'Corrigir typo na UI do software cirúrgico.', rollback: 'N/A', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] },
+                    { id: 'RFC-2016', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Implementar novo visualizador 3D.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] },
+                    { id: 'RFC-2017', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Ajuste de emergência no software de neuronavegação.', rollback: null, assinatura: null, errors: ['MISSING_ROLLBACK', 'MISSING_SIGNATURE'] }
+                ],
+                7: [ // 7 tickets
+                    { id: 'RI-1009', type: 'Incidente', solicitante: 'Auditor', depto: 'Qualidade', urgencia: null, impacto: 'Baixo', descricao: 'Teste de sistema.', errors: ['MISSING_URGENCIA'] },
+                    { id: 'RFC-2018', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Teste de RFC Risco Médio.', rollback: 'Plano OK.', assinatura: 'Kevin Mitnick', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2019', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Teste de RFC em Ativo Crítico.', rollback: 'Plano de teste OK.', assinatura: 'Auditor Externo', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2020', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Teste de RFC Risco Baixo.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RFC-2021', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Oncologia', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Teste de Incongruência.', rollback: 'N/A', assinatura: 'Kevin Mitnick', errors: ['DEPT_MISMATCH'] },
+                    { id: 'RFC-2022', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Teste de lógica de Risco.', rollback: 'Plano OK', assinatura: 'Miranda Priestly', errors: [] },
+                    { id: 'RFC-2023', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Teste de RFC em Ativo Crítico.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] }
+                ]
+            };
+
+
+            // --- 4. Estado do Jogo ---
+            let gameState = {
+                currentDay: 1,
+                ticketsInQueue: [],
+                currentTicket: null,
+                processing: false,
+                discoveredTerms: new Set(),
+                inTutorial: false,
+                tutorialStep: 0,
+                ticketsProcessed: 0, // Por dia
+                errorsCommitted: 0,  // Por dia
+                totalErrorsAcrossWeek: 0, // Total
+                timerId: null,
+                timeLeft: 0,
+                totalTime: 0, 
+                pressureMessageTimerId: null,
+                currentTimeInMinutes: 0, // Para o relógio dinâmico
+                minutesPerTicket: 0      // Para o relógio dinâmico
+            };
+
+            // --- 5. Funções Principais do Jogo ---
+
+            function initGame() {
+                console.log("Iniciando o jogo...");
+                setupEventListeners();
+                loadDay(1);
+            }
+
+            function loadDay(dayNumber) {
+                // Tela de Fim de Jogo
+                if (dayNumber > 7) {
+                    showEndGameReport();
+                    return;
+                }
+               
+                gameState.currentDay = dayNumber;
+                gameDayEl.textContent = `Dia ${dayNumber}`;
+               
+                // Lógica do Relógio
+                gameState.currentTimeInMinutes = 0; // Reseta para 08:00 AM
+                updateClockDisplay();
+               
+                document.querySelectorAll('.new-rule-indicator').forEach(el => el.remove());
+                
+                if (dayNumber > 1) {
+                    displayChatDivider(dayNumber);
+                    
+                    const newIndicator = document.createElement('span');
+                    newIndicator.className = 'new-rule-indicator ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse';
+                    newIndicator.textContent = 'NOVO!';
+                    rulesTabButton.appendChild(newIndicator);
+                    rulesTabButton.click();
+                }
+
+                gameState.ticketsInQueue = [...(TICKET_DATA[dayNumber] || [])];
+                
+                // Lógica do Relógio (Cálculo)
+                const totalTickets = gameState.ticketsInQueue.length;
+                const totalWorkMinutes = 8 * 60; // 480
+                if (totalTickets > 0) {
+                    gameState.minutesPerTicket = totalWorkMinutes / totalTickets;
+                } else {
+                    gameState.minutesPerTicket = 0;
+                }
+
+                renderRules();
+                updateGlossaryUI();
+                
+                let chatMsg = "";
+                switch(dayNumber) {
+                    case 1: break; // O tutorial cuida disso
+                    case 2: chatMsg = "Bom dia. Novos tipos de erro hoje. Verifique os solicitantes e seus departamentos."; break;
+                    case 3: chatMsg = "Hoje introduzimos RFCs de Risco Médio/Alto. Se não tiver um Plano de Rollback, é rejeição automática. Simples."; break;
+                    case 4: chatMsg = "Alguns ativos são mais importantes que outros. Um 'Risco Baixo' em um 'Ativo Crítico' não é Risco Baixo. Fique de olho nisso."; break;
+                    case 5: chatMsg = "O Comitê (CAB) está ativo. Risco Alto ou Médio exige assinatura deles. Risco Baixo exige L1. Sem exceções."; break;
+                    case 6: chatMsg = "Hoje o dia vai ser... intenso. O cronômetro está ativo. Não tomar uma decisão é uma decisão errada. Não me faça intervir."; break;
+                    case 7: chatMsg = "É o dia da auditoria. Eles vão testar tudo. Não deixe passar nada. Boa sorte."; break;
+                }
+                
+                if (dayNumber === 1) {
+                    gameState.inTutorial = true;
+                    gameState.tutorialStep = 1;
+                    runTutorialStep(1);
+                } else {
+                    renderQueue();
+                    addChatMessage('Supervisor', chatMsg, 'system');
+
+                    if (gameState.ticketsInQueue.length > 0) {
+                        selectTicket(gameState.ticketsInQueue[0].id);
+                    } else {
+                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8">Nenhum ticket para hoje.</div>`;
+                    }
+                }
+            }
+           
+            function showEndGameReport() {
+                gameContainer.style.filter = 'blur(8px)';
+                endGameReportEl.classList.remove('hidden');
+                endGameReportEl.style.opacity = '0';
+                
+                document.getElementById('end-game-total-errors').textContent = gameState.totalErrorsAcrossWeek;
+                
+                const finalTitle = document.getElementById('end-game-title');
+                const finalComment = document.getElementById('end-game-comment');
+                
+                // Limpa classes de cor anteriores
+                finalTitle.classList.remove('text-green-600', 'text-red-600');
+                finalComment.classList.remove('border-green-500', 'border-red-500');
+
+                if (gameState.totalErrorsAcrossWeek <= 5) { // Final "Bom"
+                    finalTitle.textContent = "Avaliação Concluída: Promovido";
+                    finalTitle.classList.add('text-green-600');
+                    finalComment.textContent = `"Sua precisão foi excepcional. A IA foi treinada com sucesso e seus erros foram mínimos. Você está promovido a Gerente de Implementação da IA."`;
+                    finalComment.classList.add('border-green-500');
+                } else { // Final "Ruim"
+                    finalTitle.textContent = "Avaliação Concluída: Contrato Encerrado";
+                    finalTitle.classList.add('text-red-600');
+                    finalComment.textContent = `"Seus resultados foram... insatisfatórios. A IA aprendeu com seus erros, mas o nível de risco que você introduziu é inaceitável. O conselho decidiu 'descontinuar' seu contrato. Obrigado por seus serviços."`;
+                    finalComment.classList.add('border-red-500');
+                }
+                
+                setTimeout(() => {
+                    endGameReportEl.style.opacity = '1';
+                    endGameContentEl.style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function renderQueue() {
+                ticketQueueEl.innerHTML = '';
+                queueCountEl.textContent = gameState.ticketsInQueue.length;
+               
+                gameState.ticketsInQueue.forEach((ticket, index) => {
+                    const ticketEl = document.createElement('div');
+                    ticketEl.className = 'p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors';
+                    ticketEl.dataset.ticketId = ticket.id;
+                    ticketEl.innerHTML = `
+                        <div class="font-bold">${ticket.id} (${ticket.type})</div>
+                        <div class="text-sm text-gray-600">Solicitante: ${ticket.solicitante || '[Vazio]'}</div>
+                    `;
+                    
+                    if (index === 0 && gameState.currentDay > 1 && !gameState.processing && !gameState.inTutorial) {
+                        ticketEl.classList.add('new-ticket-pulse');
+                        if (sounds.ping) {
+                            sounds.ping.triggerAttackRelease("C5", "16n", Tone.now());
+                        }
+                        setTimeout(() => {
+                            if(ticketEl) ticketEl.classList.remove('new-ticket-pulse');
+                        }, 1800);
+                    }
+                    
+                    ticketQueueEl.appendChild(ticketEl);
+                });
+            }
+
+            function renderRules() {
+                const rules = DAY_RULES[gameState.currentDay] || [];
+                let rulesHtml = '';
+                if(gameState.currentDay === 7) {
+                    rulesHtml = "<h3>Todas as Regras Ativas (Dias 1-6):</h3>" +
+                                Object.values(DAY_RULES).flat().map(rule => `<li class="text-sm text-gray-700">${rule}</li>`).join('');
+                } else {
+                    rulesHtml = rules.map(rule => `<li class="text-sm text-gray-700 font-medium">${rule}</li>`).join('');
+                }
+
+                rulesContentEl.innerHTML = `<ul class="list-disc list-inside space-y-2">${rulesHtml}</ul>`;
+                setupGlossaryTooltips(rulesContentEl);
+            }
+
+            let typingIndicatorEl = null;
+            function typeChatMessage(sender, message, type = 'npc', onComplete) {
+                if (typingIndicatorEl) chatWindowEl.removeChild(typingIndicatorEl);
+                typingIndicatorEl = document.createElement('div');
+                typingIndicatorEl.className = 'typing-cursor p-2';
+                typingIndicatorEl.textContent = `${sender} está digitando...`;
+                chatWindowEl.appendChild(typingIndicatorEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+
+                if (!colLeft.classList.contains('column-blurred')) {
+                    chatTitleEl.classList.add('chat-unread-pulse');
+                    chatWindowEl.addEventListener('mouseenter', () => {
+                        chatTitleEl.classList.remove('chat-unread-pulse');
+                    }, { once: true });
+                }
+
+                const typingTime = gameState.inTutorial ? message.length * 60 + 500 : message.length * 30 + 500;
+                
+                setTimeout(() => {
+                    if (typingIndicatorEl) {
+                        try { chatWindowEl.removeChild(typingIndicatorEl); } catch (e) {}
+                        typingIndicatorEl = null;
+                    }
+                    
+                    displayChatMessage(sender, message, type);
+                    
+                    if (onComplete) onComplete();
+                }, typingTime);
+            }
+            
+            function displayChatMessage(sender, message, type = 'npc') {
+                const msgEl = document.createElement('div');
+                let senderClass = 'font-bold text-red-600'; // NPC
+                if (type === 'system') {
+                    senderClass = 'font-bold text-blue-600'; // Supervisor
+                }
+               
+                msgEl.innerHTML = `<span class="${senderClass}">${sender}:</span> <span class="text-gray-800">${message}</span>`;
+                chatWindowEl.appendChild(msgEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+               
+                if (audioInitialized && sounds.chat) {
+                    sounds.chat.triggerAttackRelease("A4", "16n", Tone.now() + 0.1);
+                    sounds.chat.triggerAttackRelease("C5", "16n", Tone.now() + 0.2);
+                }
+            }
+            
+            function displayChatDivider(dayNumber) {
+                const divEl = document.createElement('div');
+                divEl.className = 'chat-divider';
+                divEl.textContent = `--- Início do Dia ${dayNumber} ---`;
+                chatWindowEl.appendChild(divEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+            }
+
+            function addChatMessage(sender, message, type = 'npc', onComplete) {
+                if (gameState.currentDay > 1 || gameState.inTutorial) {
+                    typeChatMessage(sender, message, type, onComplete);
+                } else {
+                    displayChatMessage(sender, message, type);
+                    if (onComplete) onComplete();
+                }
+            }
+
+            function selectTicket(ticketId) {
+                if (gameState.processing) return;
+               
+                const ticket = TICKET_DATA[gameState.currentDay].find(t => t.id === ticketId);
+                if (!ticket) return;
+               
+                gameState.currentTicket = ticket;
+                renderTicket(ticket);
+                
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                const timeForDay = DAY_TIMERS[gameState.currentDay];
+                if (timeForDay > 0) {
+                    startTimer(timeForDay);
+                }
+                
+                const pressureMsg = PRESSURE_MESSAGES[ticket.id];
+                if (pressureMsg && !gameState.inTutorial) {
+                    gameState.pressureMessageTimerId = setTimeout(() => {
+                        addChatMessage(ticket.solicitante, pressureMsg, 'npc');
+                    }, 5000); // 5 segundos
+                }
+            }
+
+            function renderTicket(ticket) {
+                const createField = (label, value, fieldId = null) => {
+                    const val = (value === null || value === undefined) ? '' : value;
+                    let valDisplay = val === '' ? '[Vazio]' : val;
+                    
+                    let emptyClass = (val === '') ? 'ticket-field-empty' : '';
+                    let dataAttr = fieldId ? `data-field="${fieldId}"` : '';
+                    let fieldClass = fieldId ? 'ticket-field rounded-md -mx-2 px-2 py-1' : 'py-1';
+                   
+                    return `
+                        <div class="${fieldClass}" ${dataAttr}>
+                            <label class="block text-sm font-medium text-gray-500">${label}</label>
+                            <div class="text-lg text-gray-900 font-medium ${emptyClass}">${valDisplay}</div>
+                        </div>
+                    `;
+                };
+
+                currentTicketEl.classList.remove('slide-out');
+               
+                currentTicketEl.innerHTML = `
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h3 class="text-3xl font-bold text-blue-700">${ticket.id}</h3>
+                        <span class="px-3 py-1 rounded-full text-sm font-bold ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'}">
+                            ${ticket.type}
+                        </span>
+                    </div>
+                   
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+                        ${createField('Solicitante', ticket.solicitante, 'solicitante')}
+                        ${createField('Departamento', ticket.depto, 'depto')}
+                       
+                        ${ticket.type === 'Incidente' ?
+                            `
+                            ${createField('Urgência', ticket.urgencia, 'urgencia')}
+                            ${createField('Impacto', ticket.impacto, 'impacto')}
+                            ` : `
+                            ${createField('Nível de Risco', ticket.risco, 'risco')}
+                            ${createField('Ativo Afetado', ticket.ativo, 'ativo')}
+                            `
+                        }
+                    </div>
+                   
+                    <div class="border-t pt-4 mt-2">
+                        ${createField('Descrição', ticket.descricao)}
+                    </div>
+                   
+                    ${ticket.type === 'Mudança' ?
+                        `
+                        <div class="border-t pt-4 mt-2 grid grid-cols-2 gap-x-6">
+                            ${createField('Plano de Rollback', ticket.rollback, 'rollback')}
+                            ${createField('Assinatura', ticket.assinatura, 'assinatura')}
+                        </div>
+                        ` : ''
+                    }
+                `;
+            }
+
+            function processDecision(decision) {
+                if (gameState.processing || !gameState.currentTicket) return;
+                
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                if (gameState.inTutorial) {
+                    if (decision === 'approve') {
+                        gameState.inTutorial = false;
+                        gameState.tutorialStep = 0;
+                        clearAllFocusPulses();
+                        console.log("Tutorial Concluído.");
+                    } else {
+                        return;
+                    }
+                }
+                
+                gameState.processing = true;
+                const ticket = gameState.currentTicket;
+               
+                let errors = [...(ticket.errors || [])];
+               
+                if (PERSONNEL_DETAILS[ticket.solicitante]) {
+                    if (PERSONNEL_DETAILS[ticket.solicitante].depto !== ticket.depto) {
+                        if (!errors.includes('DEPT_MISMATCH')) errors.push('DEPT_MISMATCH');
+                    }
+                }
+                
+                if (ticket.ativo && ASSETS.baixo.includes(ticket.ativo) && ticket.risco !== 'Baixo') {
+                    if (!errors.includes('RISK_LOGIC_VIOLATION')) errors.push('RISK_LOGIC_VIOLATION');
+                }
+                
+                if (gameState.currentDay >= 4 && ticket.type === 'Mudança') {
+                    const ativoRiscoAlto = ASSETS.alto.includes(ticket.ativo);
+                    if (ativoRiscoAlto && ticket.risco !== 'Alto') {
+                        if (!errors.includes('ASSET_RISCO_ALTO')) errors.push('ASSET_RISCO_ALTO');
+                    }
+                }
+
+                if (gameState.currentDay >= 5 && ticket.type === 'Mudança') {
+                    const isCab = STAFF.cab.includes(ticket.assinatura);
+                    const isL1 = STAFF.l1.includes(ticket.assinatura);
+                    if (ticket.risco === 'Alto' && !isCab) {
+                        if (!errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
+                    }
+                    if (ticket.risco === 'Médio' && !isCab) {
+                        if (!errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
+                    }
+                    if (ticket.risco === 'Baixo' && !isL1) {
+                         if(isCab && !errors.includes('INVALID_SIGNATURE_L1')) {
+                            errors.push('INVALID_SIGNATURE_L1');
+                         } else if (!isL1 && !errors.includes('INVALID_SIGNATURE')) {
+                            errors.push('INVALID_SIGNATURE');
+                         }
+                    }
+                }
+               
+                const hasErrors = errors.length > 0;
+                let isCorrect = false;
+
+                if (decision === 'approve' && !hasErrors) isCorrect = true;
+                else if (decision === 'reject' && hasErrors) isCorrect = true;
+                else if (decision === 'approve' && hasErrors) isCorrect = false;
+                else if (decision === 'reject' && !hasErrors) isCorrect = false;
+               
+                gameState.ticketsProcessed++;
+                if (!isCorrect) {
+                    gameState.errorsCommitted++;
+                }
+
+                if (isCorrect) {
+                    showFeedback(true, decision);
+                } else {
+                    const errorKey = errors[0] || 'GENERIC_ERROR';
+                    let errorMsg = "Decisão incorreta.";
+                    switch(errorKey) {
+                        case 'MISSING_IMPACTO':
+                        case 'MISSING_URGENCIA':
+                        case 'MISSING_SOLICITANTE':
+                            errorMsg = "Erro: Informação Faltando! (Campo Vazio)"; break;
+                        case 'MISSING_ROLLBACK':
+                            errorMsg = "Erro: RFC de Risco Alto/Médio precisa de Plano de Rollback!"; break;
+                        case 'DEPT_MISMATCH':
+                            errorMsg = "Erro: Incongruência de dados! O departamento do solicitante está incorreto."; break;
+                        case 'RISK_LOGIC_VIOLATION':
+                            errorMsg = "Erro: Violação de Lógica! Risco 'Alto' para um Ativo de Risco 'Baixo'."; break;
+                        case 'ASSET_RISCO_ALTO':
+                            errorMsg = "Erro: Este Ativo Crítico exige Risco Alto!"; break;
+                        case 'INVALID_SIGNATURE':
+                            errorMsg = "Erro: Assinatura inválida para este Risco!"; break;
+                        case 'INVALID_SIGNATURE_L1':
+                            errorMsg = "Erro: Assinatura de nível incorreto para Risco Baixo."; break;
+                    }
+                    if (decision === 'reject' && !hasErrors) {
+                        errorMsg = "Erro: Este ticket estava correto e foi rejeitado.";
+                    }
+                    showFeedback(false, decision, errorMsg);
+                }
+
+                setTimeout(() => {
+                    loadNextTicket();
+                }, isCorrect ? 1200 : 2500);
+            }
+           
+            function showFeedback(isCorrect, decision, message = "") {
+                if (isCorrect) {
+                    if (sounds.stamp) sounds.stamp.triggerAttackRelease("C2", "8n", Tone.now());
+                    watermarkTextEl.textContent = (decision === 'approve') ? 'APROVADO' : 'REJEITADO';
+                    watermarkTextEl.className = `text-9xl font-black opacity-10 ${decision === 'approve' ? 'text-green-500' : 'text-red-500'}`;
+                    watermarkEl.classList.add('show');
+                    feedbackMessageEl.textContent = (decision === 'approve') ? 'Aprovado Corretamente.' : 'Rejeitado Corretamente.';
+                    feedbackMessageEl.className = 'h-16 p-4 text-center font-bold text-green-600';
+                } else {
+                    if (sounds.reject) sounds.reject.triggerAttackRelease("2n", Tone.now() + 0.05);
+                    gameContainer.classList.add('screen-shake');
+                    feedbackMessageEl.textContent = message;
+                    feedbackMessageEl.className = 'h-16 p-4 text-center font-bold text-red-600';
+                    setTimeout(() => gameContainer.classList.remove('screen-shake'), 300);
+                }
+            }
+
+            function loadNextTicket() {
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                // Avança o relógio
+                gameState.currentTimeInMinutes += gameState.minutesPerTicket;
+                updateClockDisplay();
+                
+                currentTicketEl.classList.add('slide-out');
+               
+                setTimeout(() => {
+                    watermarkEl.classList.remove('show');
+                    feedbackMessageEl.textContent = '';
+                    gameState.processing = false;
+                    gameState.currentTicket = null;
+                   
+                    gameState.ticketsInQueue.shift();
+                    renderQueue();
+                   
+                    if (gameState.ticketsInQueue.length === 0) {
+                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8">Fim do dia. Processando...</div>`;
+                        setTimeout(() => {
+                            showEndOfDayReport();
+                        }, 1500);
+                    } else {
+                        selectTicket(gameState.ticketsInQueue[0].id);
+                       
+                        if (gameState.currentDay === 6 && gameState.ticketsInQueue.length === 1) {
+                             setTimeout(() => addChatMessage(TICKET_DATA[6][5].solicitante, PRESSURE_MESSAGES['RFC-2017'], 'npc'), 5000);
+                        }
+                    }
+                }, 400);
+            }
+
+            // --- Funções de Fim de Dia / Fim de Jogo ---
+            function showEndOfDayReport() {
+                stopTimer();
+                
+                document.getElementById('eod-day-title').textContent = `Relatório do Dia ${gameState.currentDay}`;
+                document.getElementById('eod-tickets').textContent = gameState.ticketsProcessed;
+                document.getElementById('eod-errors').textContent = gameState.errorsCommitted;
+                
+                gameState.totalErrorsAcrossWeek += gameState.errorsCommitted;
+                
+                let supervisorComment = "Bom trabalho.";
+                if (gameState.errorsCommitted > 2) supervisorComment = "Isso foi... abaixo do ideal. Muitos erros. A IA vai aprender com eles.";
+                else if (gameState.errorsCommitted > 0) supervisorComment = "Alguns deslizes, mas no geral foi bem. Precisamos de 100% de precisão.";
+                else supervisorComment = "Perfeito. É exatamente essa precisão que o sistema precisa.";
+                
+                if (gameState.currentDay === 6 && gameState.errorsCommitted > 1) {
+                    supervisorComment = "Você cedeu à pressão? Ou foi lento demais? De qualquer forma, a IA aprendeu com seus erros."
+                } else if (gameState.currentDay === 6 && gameState.errorsCommitted === 0) {
+                    supervisorComment = "Impressionante. Rápido, preciso e não cedeu à pressão. Excelente."
+                }
+                
+                document.getElementById('eod-comment').textContent = `"${supervisorComment}"`;
+                
+                eodReportEl.classList.remove('hidden');
+                eodReportEl.style.opacity = '0';
+                
+                setTimeout(() => {
+                    gameContainer.style.filter = 'blur(8px)';
+                    eodReportEl.style.opacity = '1';
+                    eodContentEl.style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function hideEndOfDayReportAndLoadNext() {
+                gameContainer.style.filter = 'none';
+                eodReportEl.style.opacity = '0';
+                eodContentEl.style.transform = 'scale(0.95)';
+                eodReportEl.classList.add('hidden');
+
+                const nextDay = gameState.currentDay + 1;
+                gameState.ticketsProcessed = 0;
+                gameState.errorsCommitted = 0;
+                
+                loadDay(nextDay);
+            }
+
+            // --- Funções do Cronômetro ---
+            
+            function startTimer(totalTime) {
+                stopTimer();
+                
+                gameState.timeLeft = totalTime;
+                gameState.totalTime = totalTime;
+                timerBarContainer.classList.add('visible');
+                updateTimerBar();
+                
+                gameState.timerId = setInterval(() => {
+                    gameState.timeLeft--;
+                    updateTimerBar();
+                    
+                    if (gameState.timeLeft <= 0) {
+                        onTimeUp();
+                    }
+                }, 1000);
+            }
+            
+            function stopTimer() {
+                if (gameState.timerId) {
+                    clearInterval(gameState.timerId);
+                    gameState.timerId = null;
+                }
+                timerBarContainer.classList.remove('visible');
+            }
+            
+            function updateTimerBar() {
+                const percentage = (gameState.timeLeft / gameState.totalTime) * 100;
+                timerBar.style.width = `${percentage}%`;
+                
+                timerBar.classList.remove('warning', 'danger');
+                if (percentage < 25) {
+                    timerBar.classList.add('danger');
+                } else if (percentage < 50) {
+                    timerBar.classList.add('warning');
+                }
+            }
+            
+            function onTimeUp() {
+                stopTimer();
+                if (gameState.processing) return;
+                
+                console.log("TEMPO ESGOTADO!");
+                
+                gameState.processing = true;
+                gameState.errorsCommitted++;
+                gameState.ticketsProcessed++;
+                
+                showFeedback(false, 'reject', "ERRO: Tempo Esgotado! Decisão automática.");
+                addChatMessage('Supervisor', "Você demorou demais! Tive que intervir para não atrasar o hospital. Isso conta como um erro.", 'system');
+                
+                setTimeout(() => {
+                    loadNextTicket();
+                }, 2500);
+            }
+            
+            // --- Função do Relógio ---
+            function updateClockDisplay() {
+                const baseTime = new Date();
+                baseTime.setHours(8, 0, 0, 0); // Inicia às 8:00 AM
+                baseTime.setMinutes(baseTime.getMinutes() + gameState.currentTimeInMinutes);
+
+                let hours = baseTime.getHours();
+                let minutes = baseTime.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = hours % 12;
+                hours = hours ? hours : 12; // '0' horas é '12' AM/PM
+                minutes = Math.floor(minutes); // Arredonda para baixo
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                const timeString = `${hours}:${minutes} ${ampm}`;
+                gameTimeEl.textContent = timeString;
+            }
+
+            // --- Funções do Tutorial ---
+            
+            function setColumnFocus(left, center, right) {
+                colLeft.classList.toggle('column-blurred', !left);
+                colCenter.classList.toggle('column-blurred', !center);
+                colRight.classList.toggle('column-blurred', !right);
+            }
+
+            function clearAllFocusPulses() {
+                document.querySelectorAll('.focus-pulse, .focus-pulse-buttons, .tab-pulse').forEach(el => {
+                    el.classList.remove('focus-pulse', 'focus-pulse-buttons', 'tab-pulse');
+                });
+            }
+
+            function typeTutorialMessages(messages, onAllComplete) {
+                let index = 0;
+                function nextMessage() {
+                    if (index < messages.length) {
+                        addChatMessage('Supervisor', messages[index], 'system', nextMessage);
+                        index++;
+                    } else {
+                        onAllComplete();
+                    }
+                }
+                nextMessage();
+            }
+            
+            function runTutorialStep(step) {
+                gameState.tutorialStep = step;
+                console.log("Tutorial Step:", step);
+
+                switch (step) {
+                    case 1:
+                        setColumnFocus(true, false, false);
+                        const introMessages = [
+                            "Bem-vindo. O hospital está implementando um 'Sistema de Decisão Automatizada' (SDA).",
+                            "Suas decisões esta semana serão usadas para 'treinar' a IA. Basicamente, você é o algoritmo.",
+                            "Siga o Manual de Regras da ISO 20000. Seus erros hoje serão os erros da máquina amanhã.",
+                            "Vamos começar."
+                        ];
+                        typeTutorialMessages(introMessages, () => runTutorialStep(2));
+                        break;
+                    
+                    case 2:
+                        addChatMessage('Supervisor', "Primeiro, clique no primeiro ticket da sua fila (RI-1001) para analisá-lo.", 'system');
+                        queueTitleEl.classList.add('focus-pulse');
+                        renderQueue();
+                        const firstTicketEl = ticketQueueEl.querySelector('[data-ticket-id]');
+                        if (firstTicketEl) {
+                            firstTicketEl.addEventListener('click', () => {
+                                if (gameState.tutorialStep !== 2) return;
+                                initAudio();
+                                selectTicket(firstTicketEl.dataset.ticketId);
+                                clearAllFocusPulses();
+                                runTutorialStep(3);
+                            }, { once: true });
+                        }
+                        break;
+                        
+                    case 3:
+                        setColumnFocus(false, true, false);
+                        setTimeout(() => runTutorialStep(4), 3000); 
+                        break;
+                        
+                    case 4:
+                        setColumnFocus(true, true, true); 
+                        addChatMessage('Supervisor', "Ótimo. Agora, verifique o Manual de Regras para ver se o ticket está correto.", 'system', () => {
+                            rulesTabButton.classList.add('tab-pulse');
+                            const firstRule = rulesContentEl.querySelector('li');
+                            if (firstRule) firstRule.classList.add('focus-pulse');
+                            setTimeout(() => {
+                                clearAllFocusPulses();
+                                runTutorialStep(5);
+                            }, 3000);
+                        });
+                        break;
+                        
+                    case 5:
+                        setColumnFocus(true, true, true);
+                        addChatMessage('Supervisor', "Este ticket está correto. Aperte o botão verde [APROVADO] para processá-lo.", 'system');
+                        actionButtonsEl.classList.add('focus-pulse-buttons');
+                        break;
+                }
+            }
+
+
+            // --- 6. Event Listeners ---
+            function setupEventListeners() {
+               
+                kbTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        if (gameState.inTutorial && gameState.tutorialStep < 4) return;
+                        
+                        const targetTab = tab.dataset.tab;
+                       
+                        if (targetTab === 'regras') {
+                            const indicator = rulesTabButton.querySelector('.new-rule-indicator');
+                            if (indicator) indicator.remove();
+                        }
+                        
+                        kbTabs.forEach(t => {
+                            t.classList.remove('active', 'bg-eef2ff', 'text-indigo-600');
+                            t.classList.add('text-gray-500');
+                        });
+                        tab.classList.add('active', 'bg-eef2ff', 'text-indigo-600');
+                        tab.classList.remove('text-gray-500');
+                        
+                        kbTabContents.forEach(c => c.classList.add('hidden'));
+                        document.getElementById(`tab-content-${targetTab}`).classList.remove('hidden');
+                    });
+                });
+
+                ticketQueueEl.addEventListener('click', (e) => {
+                    if (gameState.inTutorial && gameState.tutorialStep !== 2) return;
+                    if (gameState.processing) return;
+
+                    const ticketEl = e.target.closest('[data-ticket-id]');
+                    if (ticketEl) {
+                        if (!gameState.inTutorial) {
+                            document.querySelectorAll('#ticket-queue [data-ticket-id]').forEach(el => el.classList.remove('bg-blue-100', 'border-blue-300'));
+                            ticketEl.classList.add('bg-blue-100', 'border-blue-300');
+                            selectTicket(ticketEl.dataset.ticketId);
+                        }
+                    }
+                });
+
+                approveBtn.addEventListener('click', () => processDecision('approve'));
+                rejectBtn.addEventListener('click', () => {
+                    if (gameState.inTutorial) return;
+                    processDecision('reject');
+D                });
+                
+                eodNextDayBtn.addEventListener('click', hideEndOfDayReportAndLoadNext);
+                endGameRestartBtn.addEventListener('click', () => {
+                    location.reload(); // Reinicia o jogo
+                });
+               
+                currentTicketEl.addEventListener('click', (e) => {
+                    if (gameState.inTutorial) return;
+                    
+                    const fieldEl = e.target.closest('[data-field]');
+                    if (fieldEl) {
+                        const field = fieldEl.dataset.field;
+                        let tabToPulse = '';
+                       
+                        if (field === 'assinatura' || field === 'solicitante' || field === 'depto') tabToPulse = 'pessoal';
+                        if (field === 'ativo') tabToPulse = 'ativos';
+                        if (field === 'rollback' || field === 'risco' || field === 'urgencia' || field === 'impacto') tabToPulse = 'regras';
+                       
+                        if (tabToPulse) {
+                            const tabButton = document.querySelector(`.tab-button[data-tab='${tabToPulse}']`);
+                            if (tabButton) {
+                                tabButton.click();
+                                tabButton.classList.add('tab-pulse');
+                                setTimeout(() => tabButton.classList.remove('tab-pulse'), 1200);
+                            }
+                        }
+                    }
+                });
+            }
+           
+            // --- 7. Mecânica do Glossário ---
+            function setupGlossaryTooltips(container) {
+                container.querySelectorAll('.tooltip[data-term]').forEach(el => {
+                    const term = el.dataset.term;
+                    if (!GLOSSARY[term]) return;
+                    if (!el.querySelector('.tooltip-text')) {
+                        const tooltipText = document.createElement('span');
+                        tooltipText.className = 'tooltip-text';
+                        tooltipText.textContent = GLOSSARY[term];
+                        el.appendChild(tooltipText);
+                    }
+                    el.addEventListener('mouseenter', () => {
+                        if (!gameState.discoveredTerms.has(term)) {
+                            gameState.discoveredTerms.add(term);
+                            updateGlossaryUI();
+                        }
+                    }, { once: true });
+                });
+            }
+
+            function updateGlossaryUI() {
+                if (gameState.discoveredTerms.size === 0) {
+                     glossaryContentEl.innerHTML = `<div class="text-sm text-gray-500 text-center">Termos serão adicionados aqui conforme você os descobre.</div>`;
+                    return;
+                }
+                glossaryContentEl.innerHTML = '';
+                Array.from(gameState.discoveredTerms).sort().forEach(term => {
+                    const entry = document.createElement('div');
+                    entry.innerHTML = `
+                        <dt class="font-bold text-blue-600">${term}</dt>
+                        <dd class="text-sm text-gray-700 ml-2">${GLOSSARY[term]}</dd>
+                    `;
+                    glossaryContentEl.appendChild(entry);
+                });
+            }
+
+            // --- 8. Iniciar o Jogo ---
+            initGame();
+        });
+    </script>
+</body>
+</html>
