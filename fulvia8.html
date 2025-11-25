@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 20000 - Process vs. Pressure</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- 3. Estilos e Animações Customizadas -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        /* --- CURSOR MAC-STYLE --- */
+        html, body, button, a, input, select, .ticket-field {
+            cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2L18.5 15.5L12.5 15.5L16 22.5L13.5 23.5L10 16.5L4.5 21L5.5 2Z" fill="black" stroke="white" stroke-width="1.5"/></svg>'), auto !important;
+        }
+        .ticket-field:hover, .action-button:hover, .tab-button:hover, .ticket-item:hover {
+            cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2C7.3 2 6 3.3 6 5V12.5C6 12.2 5.8 12 5.5 12C5.2 12 5 12.2 5 12.5V16C5 18.8 7.2 21 10 21H14C16.8 21 19 18.8 19 16V9.5C19 9.2 18.8 9 18.5 9C18.2 9 18 9.2 18 9.5V12H16V7.5C16 7.2 15.8 7 15.5 7C15.2 7 15 7.2 15 7.5V12H13V4.5C13 4.2 12.8 4 12.5 4C12.2 4 12 4.2 12 4.5V12H10V5C10 4.4 9.6 4 9 4C8.4 4 8 4.4 8 5V12H6V5C6 3.3 7.3 2 9 2Z" fill="black" stroke="white" stroke-width="1.5"/></svg>'), pointer !important;
+        }
+
+        /* --- SCROLLBAR CUSTOMIZADA --- */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 10px;
+            transition: background 0.3s;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.8);
+        }
+
+        /* --- BASE & TYPOGRAPHY --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgb(240, 244, 255) 0%, rgb(225, 230, 245) 90%);
+            overflow: hidden;
+            color: #111827;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #game-container {
+            display: grid;
+            /* Ajuste de Grid: Aumentei a primeira coluna (1.3fr) para dar espaço à fila */
+            grid-template-columns: 1.3fr 2.1fr 1.1fr;
+            gap: 1.5rem;
+            height: 100vh;
+            padding: 1.5rem;
+            transition: filter 0.3s ease-out;
+        }
+
+        /* --- GLASSMORPHISM UI --- */
+        .game-column {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 1rem;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.03),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        /* --- BOTÕES & AÇÕES (POP EFFECT) --- */
+        .action-button {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            border: none;
+            position: relative;
+            top: 0;
+        }
+        .action-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            filter: brightness(1.05);
+            z-index: 10;
+        }
+        .action-button:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            filter: brightness(0.95);
+        }
+
+        /* Abas */
+        .tab-button {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .tab-button.active {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .tab-button:not(.active):hover {
+            background-color: rgba(255,255,255,0.8);
+            color: #1f2937;
+        }
+
+        /* Ticket Queue Item Styling */
+        #ticket-queue > div {
+            border-radius: 0.5rem;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+        #ticket-queue > div:hover {
+            background-color: rgba(239, 246, 255, 0.9);
+            transform: translateX(2px);
+            border-color: #bfdbfe;
+        }
+
+        /* Mesa de Trabalho */
+        #current-ticket {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Cronômetro */
+        #timer-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(229, 231, 235, 0.5);
+            border-radius: 99px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #timer-bar-container.visible {
+            opacity: 1;
+        }
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            border-radius: 99px;
+            transition: width 1s linear, background 0.5s;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+        }
+        #timer-bar.warning {
+            background: linear-gradient(90deg, #f97316, #fb923c);
+            box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+        }
+        #timer-bar.danger {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Efeitos Visuais Gerais */
+        .column-blurred {
+            filter: blur(6px) grayscale(0.5);
+            opacity: 0.5;
+            pointer-events: none;
+            transform: scale(0.98);
+        }
+        .focus-pulse {
+            border-radius: 0.5rem;
+            position: relative;
+            z-index: 20;
+            animation: focus-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes focus-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .focus-pulse-buttons {
+            border-radius: 0.5rem;
+            animation: focus-pulse-buttons 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+         @keyframes focus-pulse-buttons {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .new-ticket-pulse {
+            animation: pulse 0.8s 3;
+        }
+        .chat-unread-pulse {
+            position: relative;
+        }
+        .chat-unread-pulse::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -8px;
+            width: 10px;
+            height: 10px;
+            background-color: #f97316;
+            border: 2px solid white;
+            border-radius: 99px;
+            animation: fast-pulse 1s infinite;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        @keyframes fast-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.9); opacity: 0.8; }
+        }
+        .typing-cursor {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            background: rgba(243, 244, 246, 0.5);
+            border-radius: 0.5rem;
+            display: inline-block;
+        }
+        .typing-cursor::after {
+            content: '●';
+            color: #3b82f6;
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+            font-size: 0.75rem;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .ticket-field-empty .text-lg {
+            background-color: rgba(249, 250, 251, 0.8);
+            border: 1px dashed #d1d5db;
+            min-height: 1.75rem;
+            color: #9ca3af;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            padding-left: 0.5rem;
+        }
+
+        .tab-pulse {
+            animation: pulse-bg 0.6s 2;
+        }
+        @keyframes pulse-bg {
+            0% { background-color: #e0e7ff; }
+            50% { background-color: #c7d2fe; }
+            100% { background-color: #e0e7ff; }
+        }
+        .screen-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+        #watermark {
+            opacity: 0;
+            transform: scale(1.3) rotate(-10deg);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        #watermark.show {
+            opacity: 1;
+            transform: scale(1) rotate(-5deg);
+        }
+        #current-ticket {
+            animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #current-ticket.slide-out {
+            animation: slideOut 0.4s ease-in forwards;
+        }
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(40px); }
+        }
+        
+        /* --- TOOLTIPS CORRIGIDOS --- */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            text-decoration: none;
+            border-bottom: 2px dotted #60a5fa;
+            transition: border-color 0.2s;
+        }
+        .tooltip:hover {
+            border-bottom-color: #2563eb;
+        }
+        /* Tooltip Text: Ajustado para não sobrepor ou vazar */
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: max-content;
+            max-width: 200px; /* Limite de largura para não quebrar o layout */
+            background-color: rgba(31, 41, 55, 0.98);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            text-align: center;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            position: absolute;
+            z-index: 100; /* Z-index alto */
+            opacity: 0;
+            transition: all 0.2s ease-out;
+            font-size: 0.75rem;
+            font-weight: 500;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            line-height: 1.4;
+            white-space: normal;
+            
+            /* Posicionamento: Acima do texto */
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            pointer-events: none;
+        }
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* Seta em baixo */
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(31, 41, 55, 0.98) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .ticket-field {
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.375rem;
+        }
+        .ticket-field:hover {
+            background-color: rgba(243, 244, 246, 0.8);
+            transform: scale(1.01);
+        }
+
+        .report-screen {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(8px);
+            transition: opacity 0.4s ease-in-out;
+        }
+        .report-content {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.9);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .chat-divider {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            color: #9ca3af;
+            padding: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-divider::before, .chat-divider::after {
+            content: '';
+            height: 1px;
+            background: #e5e7eb;
+            flex: 1;
+            margin: 0 10px;
+        }
+        
+        #chat-window div:not(.chat-divider) {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Container principal do jogo -->
+    <div id="game-container">
+
+        <!-- ============================================= -->
+        <!-- COLUNA ESQUERDA (Fila & Comunicação)          -->
+        <!-- ============================================= -->
+        <div id="col-left" class="game-column">
+            <div id="game-info" class="p-4 border-b border-gray-200/50 text-center bg-white/30">
+                <h2 class="text-lg font-black text-indigo-600 tracking-tight">Absolutamente SIM!</h2>
+                <div id="game-day" class="text-3xl font-bold text-gray-800 mt-1 tracking-tighter">Dia 1</div>
+                <!-- O relógio dinâmico -->
+                <div id="game-time" class="text-xs font-semibold text-gray-500 mt-1 bg-gray-100/50 inline-block px-3 py-1 rounded-full">08:00 AM</div>
+            </div>
+
+            <div class="flex-shrink-0 p-3 border-b border-gray-200/50 bg-white/20">
+                <h3 id="queue-title" class="font-bold text-gray-700 flex items-center text-sm">
+                    Fila de Tickets 
+                    <span id="queue-count" class="ml-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </h3>
+            </div>
+            <!-- Aumentado flex-grow para dar prioridade visual à fila -->
+            <div id="ticket-queue" class="flex-grow-[2] overflow-y-auto p-3 space-y-3">
+                <!-- Tickets serão injetados aqui pelo JS -->
+            </div>
+
+            <div class="flex-shrink-0 p-2 border-t border-gray-200/50 bg-gray-50/30">
+                <h3 id="chat-title" class="font-bold text-gray-400 inline-block text-[10px] uppercase tracking-wide pl-2">Chat Interno</h3>
+            </div>
+            <!-- Reduzido flex-grow para o chat ocupar menos espaço -->
+            <div id="chat-window" class="flex-grow-[1] overflow-y-auto p-3 space-y-2 bg-white/40 mx-3 mb-3 rounded-lg border border-gray-100 shadow-inner text-xs">
+                <!-- Mensagens de chat injetadas aqui -->
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- COLUNA CENTRAL (Mesa de Trabalho)             -->
+        <!-- ============================================= -->
+        <div id="col-center" class="game-column p-6 relative">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200/50 pb-3">Mesa de Trabalho</h2>
+            
+            <div id="workbench" class="flex-1 relative">
+                <div id="current-ticket" class="bg-white/90 p-8 rounded-xl border border-white/60 shadow-sm space-y-6 min-h-[400px]">
+                    <div class="text-center text-gray-400 p-8 flex flex-col items-center justify-center h-full">
+                        <svg class="w-12 h-12 mb-4 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" /></svg>
+                        <span>Selecione um ticket da fila para começar.</span>
+                    </div>
+                </div>
+                <div id="watermark" class="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                    <span id="watermark-text" class="text-9xl font-black opacity-10 mix-blend-multiply"></span>
+                </div>
+            </div>
+            
+            <!-- Cronômetro Progressivo -->
+            <div id="timer-bar-container">
+                <div id="timer-bar"></div>
+            </div>
+
+            <div id="feedback-message" class="h-12 flex items-center justify-center font-bold text-sm transition-all"></div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- COLUNA DIREITA (Ferramentas & Ação)           -->
+        <!-- ============================================= -->
+        <div id="col-right" class="game-column">
+            <div id="knowledge-base" class="flex-1 flex flex-col p-4" style="min-height: 0;">
+                <h3 class="text-lg font-bold text-gray-800 mb-3 text-center uppercase tracking-wide border-b border-gray-200/50 pb-2">Manual de Regras</h3>
+                
+                <nav class="flex space-x-1 p-1 bg-gray-100/80 rounded-lg mb-2">
+                    <button data-tab="regras" class="tab-button flex-1 py-1.5 px-1 text-xs active">Regras</button>
+                    <button data-tab="ativos" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Ativos</button>
+                    <button data-tab="pessoal" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Pessoal</button>
+                    <button data-tab="glossario" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Glossário</button>
+                </nav>
+
+                <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar" style="min-height: 0;">
+                    <div id="tab-content-regras" class="tab-content space-y-3 p-1">
+                        <!-- Regras injetadas pelo JS -->
+                    </div>
+                    <div id="tab-content-ativos" class="tab-content hidden space-y-3 p-1">
+                        <div class="mb-2">
+                            <div class="font-bold text-red-600 text-sm mb-1">Servidores Críticos (Risco Alto)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
+                                <li>SRV-DB-01 (Banco de Pacientes)</li>
+                                <li>SRV-IMG-01 (Imagens Médicas)</li>
+                                <li>SRV-APP-CIR (Software Cirúrgico)</li>
+                            </ul>
+                        </div>
+                        <div class="mb-2">
+                            <div class="font-bold text-orange-600 text-sm mb-1">Estações de Trabalho (Risco Médio)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
+                                <li>UTI-DESK-01 a 10</li>
+                                <li>RAD-DESK-01 (Radiologia)</li>
+                                <li>DIAG-DESK-01 (Diagnóstico)</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="font-bold text-green-600 text-sm mb-1">Periféricos (Risco Baixo)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
+                                <li>IMP-RECEP-01 (Impressora Recepção)</li>
+                                <li>SCAN-LAB-01 (Scanner Laboratório)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- ABA PESSOAL MELHORADA -->
+                    <div id="tab-content-pessoal" class="tab-content hidden space-y-3 p-1">
+                        <!-- Card CAB -->
+                        <div class="bg-indigo-50/80 rounded-lg p-3 border border-indigo-100 shadow-sm">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="font-bold text-indigo-800 text-sm">CAB</div>
+                                <span class="text-[10px] bg-indigo-200 text-indigo-800 px-1.5 rounded font-bold">Alto/Médio</span>
+                            </div>
+                            <div class="text-[10px] text-indigo-400 mb-1 uppercase font-semibold">Comitê de Aprovação</div>
+                            <ul class="text-xs text-gray-700 space-y-1">
+                                <li class="flex items-start"><span class="mr-1">•</span> Miranda Priestly (Diretora)</li>
+                                <li class="flex items-start"><span class="mr-1">•</span> Linus Torvalds (CTO)</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card L1 -->
+                        <div class="bg-blue-50/80 rounded-lg p-3 border border-blue-100 shadow-sm">
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="font-bold text-blue-800 text-sm">Gerentes L1</div>
+                                <span class="text-[10px] bg-blue-200 text-blue-800 px-1.5 rounded font-bold">Baixo</span>
+                            </div>
+                            <div class="text-[10px] text-blue-400 mb-1 uppercase font-semibold">Eng. de Segurança</div>
+                            <ul class="text-xs text-gray-700 space-y-1">
+                                <li class="flex items-start"><span class="mr-1">•</span> Kevin Mitnick</li>
+                                <li class="flex items-start"><span class="mr-1">•</span> Gary McKinnon</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card Staff Details -->
+                        <div class="bg-gray-50/80 rounded-lg p-3 border border-gray-200 shadow-sm">
+                            <div class="font-bold text-gray-700 text-sm mb-2 border-b border-gray-200 pb-1">Staff (Verificação)</div>
+                            <ul class="text-xs text-gray-600 space-y-1.5">
+                                <li><span class="font-semibold text-gray-800">Dr. House:</span> Diagnóstico</li>
+                                <li><span class="font-semibold text-gray-800">G. Fring:</span> Administração</li>
+                                <li><span class="font-semibold text-gray-800">Dr. Fries:</span> Oncologia</li>
+                                <li><span class="font-semibold text-gray-800">Dr. Lecter:</span> P&D Cirúrgico</li>
+                                <li><span class="font-semibold text-gray-800">W. White:</span> Lab. Químico</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- FIM ABA PESSOAL -->
+
+                    <div id="tab-content-glossario" class="tab-content hidden space-y-3 p-1">
+                        <div class="text-xs text-gray-400 text-center italic mt-4">Termos serão adicionados aqui conforme você os descobre.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação: Texto limpo -->
+            <div id="action-buttons" class="grid grid-cols-2 gap-4 p-5 border-t border-gray-200/50 bg-gray-50/50">
+                <button id="reject-btn" class="action-button w-full py-4 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-black text-lg rounded-xl shadow-lg border-b-4 border-red-800 active:border-b-0 active:mt-1 uppercase tracking-wider flex items-center justify-center">
+                    Rejeitar
+                </button>
+                <button id="approve-btn" class="action-button w-full py-4 bg-gradient-to-b from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-black text-lg rounded-xl shadow-lg border-b-4 border-green-800 active:border-b-0 active:mt-1 uppercase tracking-wider flex items-center justify-center">
+                    Aprovar
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TELA DE RELATÓRIO DE FIM DE DIA -->
+    <div id="eod-report" class="report-screen hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div id="eod-content" class="report-content p-10 rounded-2xl w-full max-w-lg text-center">
+            <h2 id="eod-day-title" class="text-4xl font-black mb-6 text-gray-800 tracking-tight">Relatório do Dia X</h2>
+            <div class="space-y-4 text-lg bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <span class="text-gray-600">Tickets Processados</span>
+                    <span id="eod-tickets" class="font-bold text-blue-600 text-2xl">0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Erros Cometidos</span>
+                    <span id="eod-errors" class="font-bold text-red-600 text-2xl">0</span>
+                </div>
+            </div>
+            <blockquote id="eod-comment" class="mt-8 p-6 bg-blue-50 border-l-4 border-blue-500 text-left italic text-blue-800 rounded-r-lg shadow-sm">
+                "Comentário do Supervisor..."
+            </blockquote>
+            <button id="eod-next-day-btn" class="action-button mt-10 w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xl rounded-xl shadow-xl border-b-4 border-indigo-900 active:border-b-0 active:mt-1">
+                Começar o Próximo Dia
+            </button>
+        </div>
+    </div>
+    
+    <!-- TELA DE FIM DE JOGO -->
+    <div id="end-game-report" class="report-screen hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div id="end-game-content" class="report-content p-10 rounded-2xl w-full max-w-xl text-center">
+            <h2 id="end-game-title" class="text-4xl font-black mb-6 tracking-tight">Fim de Jogo</h2>
+            <div class="space-y-4 text-xl bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6">
+                <p>Total de Erros na Semana: <span id="end-game-total-errors" class="font-bold text-red-600 text-3xl ml-2">0</span></p>
+            </div>
+            <blockquote id="end-game-comment" class="p-6 bg-gray-100 border-l-4 text-left italic text-gray-700 rounded-r-lg shadow-sm text-lg">
+                "Comentário Final do Supervisor..."
+            </blockquote>
+            <button id="end-game-restart-btn" class="action-button mt-10 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xl rounded-xl shadow-xl border-b-4 border-blue-900 active:border-b-0 active:mt-1">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- JAVASCRIPT - LÓGICA DO JOGO (100% Original)   -->
+    <!-- ============================================= -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Elementos do DOM ---
+            const gameContainer = document.getElementById('game-container');
+            const colLeft = document.getElementById('col-left');
+            const colCenter = document.getElementById('col-center');
+            const colRight = document.getElementById('col-right');
+            const gameDayEl = document.getElementById('game-day');
+            const gameTimeEl = document.getElementById('game-time'); // Relógio
+            const queueCountEl = document.getElementById('queue-count');
+            const ticketQueueEl = document.getElementById('ticket-queue');
+            const queueTitleEl = document.getElementById('queue-title');
+            const chatWindowEl = document.getElementById('chat-window');
+            const chatTitleEl = document.getElementById('chat-title');
+            const currentTicketEl = document.getElementById('current-ticket');
+            const watermarkEl = document.getElementById('watermark');
+            const watermarkTextEl = document.getElementById('watermark-text');
+            const feedbackMessageEl = document.getElementById('feedback-message');
+            const approveBtn = document.getElementById('approve-btn');
+            const rejectBtn = document.getElementById('reject-btn');
+            const actionButtonsEl = document.getElementById('action-buttons');
+            const kbTabs = document.querySelectorAll('.tab-button');
+            const kbTabContents = document.querySelectorAll('.tab-content');
+            const rulesContentEl = document.getElementById('tab-content-regras');
+            const rulesTabButton = document.querySelector('.tab-button[data-tab="regras"]');
+            const glossaryContentEl = document.getElementById('tab-content-glossario');
+            // Telas de Relatório
+            const eodReportEl = document.getElementById('eod-report');
+            const eodContentEl = document.getElementById('eod-content');
+            const eodNextDayBtn = document.getElementById('eod-next-day-btn');
+            const endGameReportEl = document.getElementById('end-game-report');
+            const endGameContentEl = document.getElementById('end-game-content');
+            const endGameRestartBtn = document.getElementById('end-game-restart-btn');
+            // Cronômetro
+            const timerBarContainer = document.getElementById('timer-bar-container');
+            const timerBar = document.getElementById('timer-bar');
+
+            // --- 2. Definições de Áudio (Tone.js) ---
+            let audioInitialized = false;
+            let sounds = {};
+
+            function initAudio() {
+                if (audioInitialized) return;
+                sounds.ping = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, release: 0.1 } }).toDestination();
+                sounds.stamp = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
+                sounds.reject = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 } }).toDestination();
+                sounds.typing = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
+                sounds.chat = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+                
+                audioInitialized = true;
+                console.log("Audio Context Initialized.");
+            }
+            document.body.addEventListener('click', initAudio, { once: true });
+
+            // --- 3. Dicionários e Dados do Jogo ---
+
+            const GLOSSARY = {
+                'RI': "Registro de Incidente.",
+                'RFC': "Requisição de Mudança (Request for Change).",
+                'SLA': "Acordo de Nível de Serviço (Service Level Agreement).",
+                'Urgência': "A velocidade com que um Incidente precisa ser resolvido.",
+                'Impacto': "A medida do efeito de um Incidente nos processos de negócio.",
+                'Risco': "A probabilidade de uma ameaça.",
+                'Plano de Rollback': "Um plano detalhado para reverter uma Mudança.",
+                'CAB': "Comitê de Aprovação de Mudanças.",
+                'Ativo Crítico': "Qualquer componente essencial para um serviço vital."
+            };
+
+            const STAFF = {
+                cab: ['Miranda Priestly', 'Linus Torvalds'],
+                l1: ['Kevin Mitnick', 'Gary McKinnon']
+            };
+
+            const PERSONNEL_DETAILS = {
+                'Dr. Gregory House': { depto: 'Diagnóstico' },
+                'Gustavo Fring': { depto: 'Administração' },
+                'Dr. Victor Fries': { depto: 'Oncologia' },
+                'Dr. Hannibal Lecter': { depto: 'P&D Cirúrgico' },
+                'Walter White': { depto: 'Laboratório Químico' }
+            };
+
+            const ASSETS = {
+                alto: ['SRV-DB-01', 'SRV-IMG-01', 'SRV-APP-CIR'],
+                medio: ['UTI-DESK-05', 'RAD-DESK-01', 'DIAG-DESK-01'],
+                bajo: ['IMP-RECEP-01', 'SCAN-LAB-01']
+            };
+            
+            // Mensagens de Pressão (Tom e Velocidade)
+            const PRESSURE_MESSAGES = {
+                'RI-1004': "Por que estão demorando tanto? Preciso disso agora.", // Dr. House
+                'RI-1006': "Olha, aprova esse chamado pra mim. Quem sabe, em troca, eu consigo preparar algo que só alguém da minha área saberia fazer.", // Walter White
+                'RI-1008': "Esse equipamento de radiologia não está ligando. Estou perdendo dinheiro a cada segundo. Quer que eu vá até aí para você aprovar isso?", // Gustavo Fring
+                'RFC-2003': "Esta nova IA é um avanço fascinante. Não deixe que a falta de informações atrase o progresso.", // Dr. Hannibal Lecter
+                'RFC-2016': "Preciso desse visualizador 3D com urgência. Aprove essa droga ou encontre outro emprego.", // Dr. Gregory House
+                'RFC-2017': "Meu caro, o bisturi não tolera hesitações. Tenho só dez minutos até a cirurgia. Aprove logo." // Dr. Hannibal Lecter
+            };
+
+            // Cronômetro Progressivo
+            const DAY_TIMERS = {
+                1: -1,  // Tutorial
+                2: 120, // 2:00
+                3: 120, // 2:00
+                4: 90,  // 1:30
+                5: 90,  // 1:30
+                6: 60,  // 1:00
+                7: 60   // 1:00
+            };
+
+            const DAY_RULES = {
+                1: [
+                    "Todo <span class='tooltip' data-term='RI'>RI</span> deve ter <span class='tooltip' data-term='Urgência'>Urgência</span> e <span class='tooltip' data-term='Impacto'>Impacto</span> definidos.",
+                    "O <span class='tooltip' data-term='SLA'>SLA</span> de resolução é de 4 horas para RIs de Prioridade Alta."
+                ],
+                2: [
+                    "Todos os campos do solicitante (Nome, Depto) devem estar preenchidos.",
+                    "Introdução de <span class='tooltip' data-term='RFC'>RFC</span>s. RFCs de Risco Baixo são permitidas.",
+                    "Verificar consistência de dados do Pessoal (Aba 'Pessoal')."
+                ],
+                3: [
+                    "Toda <span class='tooltip' data-term='RFC'>RFC</span> com <span class='tooltip' data-term='Risco'>Risco</span> 'Médio' ou 'Alto' DEVE ter um <span class='tooltip' data-term='Plano de Rollback'>Plano de Rollback</span> detalhado."
+                ],
+                4: [
+                    "RFCs que afetam <span class='tooltip' data-term='Ativo Crítico'>Ativos Críticos</span> (ver aba 'Ativos') são automaticamente consideradas de Risco 'Alto'.",
+                    "O Risco do ticket deve ser compatível com o Risco do Ativo (ex: Risco 'Baixo' para Ativo 'Baixo')."
+                ],
+                5: [
+                    "Toda RFC de Risco 'Alto' DEVE ter uma assinatura válida do <span class='tooltip' data-term='CAB'>CAB</span> (ver aba 'Pessoal').",
+                    "RFCs de Risco 'Médio' também devem ser assinadas pelo CAB.",
+                    "RFCs de Risco 'Baixo' podem ser assinadas por Gerentes L1."
+                ],
+                6: ["DIA DE PRESSÃO: O cronômetro está ativo. Nenhuma RFC de Risco Alto pode ser aprovada sem Rollback E assinatura do CAB. SEM EXCEÇÕES."],
+                7: ["AUDITORIA FINAL: Todas as regras (Dias 1-6) estão ativas. Verifique tudo!"]
+            };
+
+            // Mais Tickets (Dias 2-5)
+            const TICKET_DATA = {
+                1: [
+                    { id: 'RI-1001', type: 'Incidente', solicitante: 'Dr. Victor Fries', depto: 'Oncologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Monitor cardíaco da UTI-DESK-05 não está respondendo.', errors: [] },
+                    { id: 'RI-1002', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Média', impacto: null, descricao: 'Sistema de imagens (RAD-DESK-01) lento.', errors: ['MISSING_IMPACTO'] },
+                    { id: 'RI-1003', type: 'Incidente', solicitante: 'Recepção', depto: 'Geral', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Impressora de pulseiras travando.', errors: [] }
+                ],
+                2: [ // 4 tickets
+                    { id: 'RI-1004', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Cardiologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Software de ecocardiograma falhando.', errors: ['DEPT_MISMATCH'] },
+                    { id: 'RFC-2001', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar patch de segurança em desktops da administração.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RI-1005', type: 'Incidente', solicitante: null, depto: 'Laboratório Químico', urgencia: 'Média', impacto: 'Média', descricao: 'Centrífuga não envia dados.', errors: ['MISSING_SOLICITANTE'] },
+                    { id: 'RI-1006', type: 'Incidente', solicitante: 'Walter White', depto: 'Laboratório Químico', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Scanner (SCAN-LAB-01) com bug de driver.', errors: [] } // Ticket correto
+                ],
+                3: [ // 4 tickets
+                    { id: 'RFC-2002', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Update de firmware no switch da ala Leste.', rollback: 'Reiniciar o switch para config anterior.', assinatura: 'Linus Torvalds', errors: [] },
+                    { id: 'RFC-2003', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Implementar novo módulo de IA no SRV-APP-CIR.', rollback: null, assinatura: 'Miranda Priestly', errors: ['MISSING_ROLLBACK'] },
+                    { id: 'RI-1007', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', urgencia: 'Alta', impacto: 'Alta', descricao: 'Estação de diagnóstico (DIAG-DESK-01) sem acesso ao SRV-IMG-01.', errors: [] },
+                    { id: 'RFC-2004', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Patch de segurança em estação da UTI.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] } // Erro
+                ],
+                4: [ // 4 tickets
+                    { id: 'RFC-2005', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-DB-01', descricao: 'Otimizar queries no SRV-DB-01.', rollback: 'Reverter script de DB.', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] }, 
+                    { id: 'RFC-2006', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Alto', ativo: 'IMP-RECEP-01', descricao: 'Trocar toner da impressora da recepção.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: ['RISK_LOGIC_VIOLATION', 'INVALID_SIGNATURE'] },
+                    { id: 'RFC-2007', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Migração do SRV-DB-01 para novo hardware.', rollback: 'Manter servidor antigo online como hot-swap.', assinatura: 'Linus Torvalds', errors: [] },
+                    { id: 'RFC-2008', type: 'Mudança', solicitante: 'Walter White', depto: 'Laboratório Químico', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Update de software do scanner.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] } // Erro
+                ],
+                5: [ // 4 tickets
+                    { id: 'RFC-2009', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Instalar software experimental no DIAG-DESK-01.', rollback: 'Desinstalar software.', assinatura: 'Dr. Gregory House', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2010', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Médio', ativo: 'DIAG-DESK-01', descricao: 'Implementar novo visualizador 3D.', rollback: 'Plano de rollback em anexo.', assinatura: 'Gustavo Fring', errors: ['INVALID_SIGNATURE', 'DEPT_MISMATCH'] }, // Erro duplo
+                    { id: 'RFC-2011', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Adicionar novo grupo de impressoras.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] },
+                    { id: 'RFC-2012', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Patch urgente no SRV-APP-CIR.', rollback: 'Snapshot da VM antes do patch.', assinatura: 'Linus Torvalds', errors: [] }
+                ],
+                6: [ // 6 tickets
+                    { id: 'RI-1008', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Alta', impacto: 'Alta', descricao: 'RAD-DESK-01 não liga. Cirurgias marcadas.', errors: [] },
+                    { id: 'RFC-2013', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar driver da impressora da recepção.', rollback: 'Reverter driver.', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RFC-2014', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Instalar novo software de monitoramento na UTI.', rollback: 'Desinstalar software.', assinatura: 'Gary McKinnon', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2015', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-APP-CIR', descricao: 'Corrigir typo na UI do software cirúrgico.', rollback: 'N/A', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] },
+                    { id: 'RFC-2016', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Implementar novo visualizador 3D.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] },
+                    { id: 'RFC-2017', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Ajuste de emergência no software de neuronavegação.', rollback: null, assinatura: null, errors: ['MISSING_ROLLBACK', 'MISSING_SIGNATURE'] }
+                ],
+                7: [ // 7 tickets
+                    { id: 'RI-1009', type: 'Incidente', solicitante: 'Auditor', depto: 'Qualidade', urgencia: null, impacto: 'Baixo', descricao: 'Teste de sistema.', errors: ['MISSING_URGENCIA'] },
+                    { id: 'RFC-2018', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Teste de RFC Risco Médio.', rollback: 'Plano OK.', assinatura: 'Kevin Mitnick', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2019', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Teste de RFC em Ativo Crítico.', rollback: 'Plano de teste OK.', assinatura: 'Auditor Externo', errors: ['INVALID_SIGNATURE'] },
+                    { id: 'RFC-2020', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Teste de RFC Risco Baixo.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: [] },
+                    { id: 'RFC-2021', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Oncologia', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Teste de Incongruência.', rollback: 'N/A', assinatura: 'Kevin Mitnick', errors: ['DEPT_MISMATCH'] },
+                    { id: 'RFC-2022', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Teste de lógica de Risco.', rollback: 'Plano OK', assinatura: 'Miranda Priestly', errors: [] },
+                    { id: 'RFC-2023', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Teste de RFC em Ativo Crítico.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] }
+                ]
+            };
+
+
+            // --- 4. Estado do Jogo ---
+            let gameState = {
+                currentDay: 1,
+                ticketsInQueue: [],
+                currentTicket: null,
+                processing: false,
+                discoveredTerms: new Set(),
+                inTutorial: false,
+                tutorialStep: 0,
+                ticketsProcessed: 0, // Por dia
+                errorsCommitted: 0,  // Por dia
+                totalErrorsAcrossWeek: 0, // Total
+                timerId: null,
+                timeLeft: 0,
+                totalTime: 0, 
+                pressureMessageTimerId: null,
+                currentTimeInMinutes: 0, // Para o relógio dinâmico
+                minutesPerTicket: 0      // Para o relógio dinâmico
+            };
+
+            // --- 5. Funções Principais do Jogo ---
+
+            function initGame() {
+                console.log("Iniciando o jogo...");
+                setupEventListeners();
+                loadDay(1);
+            }
+
+            function loadDay(dayNumber) {
+                // Tela de Fim de Jogo
+                if (dayNumber > 7) {
+                    showEndGameReport();
+                    return;
+                }
+                
+                gameState.currentDay = dayNumber;
+                gameDayEl.textContent = `Dia ${dayNumber}`;
+                
+                // Lógica do Relógio
+                gameState.currentTimeInMinutes = 0; // Reseta para 08:00 AM
+                updateClockDisplay();
+                
+                document.querySelectorAll('.new-rule-indicator').forEach(el => el.remove());
+                
+                if (dayNumber > 1) {
+                    displayChatDivider(dayNumber);
+                    
+                    const newIndicator = document.createElement('span');
+                    newIndicator.className = 'new-rule-indicator ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse';
+                    newIndicator.textContent = 'NOVO!';
+                    rulesTabButton.appendChild(newIndicator);
+                    rulesTabButton.click();
+                }
+
+                gameState.ticketsInQueue = [...(TICKET_DATA[dayNumber] || [])];
+                
+                // Lógica do Relógio (Cálculo)
+                const totalTickets = gameState.ticketsInQueue.length;
+                const totalWorkMinutes = 8 * 60; // 480
+                if (totalTickets > 0) {
+                    gameState.minutesPerTicket = totalWorkMinutes / totalTickets;
+                } else {
+                    gameState.minutesPerTicket = 0;
+                }
+
+                renderRules();
+                updateGlossaryUI();
+                
+                let chatMsg = "";
+                switch(dayNumber) {
+                    case 1: break; // O tutorial cuida disso
+                    case 2: chatMsg = "Bom dia. Novos tipos de erro hoje. Verifique os solicitantes e seus departamentos."; break;
+                    case 3: chatMsg = "Hoje introduzimos RFCs de Risco Médio/Alto. Se não tiver um Plano de Rollback, é rejeição automática. Simples."; break;
+                    case 4: chatMsg = "Alguns ativos são mais importantes que outros. Um 'Risco Baixo' em um 'Ativo Crítico' não é Risco Baixo. Fique de olho nisso."; break;
+                    case 5: chatMsg = "O Comitê (CAB) está ativo. Risco Alto ou Médio exige assinatura deles. Risco Baixo exige L1. Sem exceções."; break;
+                    case 6: chatMsg = "Hoje o dia vai ser... intenso. O cronômetro está ativo. Não tomar uma decisão é uma decisão errada. Não me faça intervir."; break;
+                    case 7: chatMsg = "É o dia da auditoria. Eles vão testar tudo. Não deixe passar nada. Boa sorte."; break;
+                }
+                
+                if (dayNumber === 1) {
+                    gameState.inTutorial = true;
+                    gameState.tutorialStep = 1;
+                    runTutorialStep(1);
+                } else {
+                    renderQueue();
+                    addChatMessage('Supervisor', chatMsg, 'system');
+
+                    if (gameState.ticketsInQueue.length > 0) {
+                        selectTicket(gameState.ticketsInQueue[0].id);
+                    } else {
+                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8">Nenhum ticket para hoje.</div>`;
+                    }
+                }
+            }
+            
+            function showEndGameReport() {
+                gameContainer.style.filter = 'blur(8px)';
+                endGameReportEl.classList.remove('hidden');
+                endGameReportEl.style.opacity = '0';
+                
+                document.getElementById('end-game-total-errors').textContent = gameState.totalErrorsAcrossWeek;
+                
+                const finalTitle = document.getElementById('end-game-title');
+                const finalComment = document.getElementById('end-game-comment');
+                
+                // Limpa classes de cor anteriores
+                finalTitle.classList.remove('text-green-600', 'text-red-600');
+                finalComment.classList.remove('border-green-500', 'border-red-500');
+
+                if (gameState.totalErrorsAcrossWeek <= 5) { // Final "Bom"
+                    finalTitle.textContent = "Avaliação Concluída: Promovido";
+                    finalTitle.classList.add('text-green-600');
+                    finalComment.textContent = `"Sua precisão foi excepcional. A IA foi treinada com sucesso e seus erros foram mínimos. Você está promovido a Gerente de Implementação da IA."`;
+                    finalComment.classList.add('border-green-500');
+                } else { // Final "Ruim"
+                    finalTitle.textContent = "Avaliação Concluída: Contrato Encerrado";
+                    finalTitle.classList.add('text-red-600');
+                    finalComment.textContent = `"Seus resultados foram... insatisfatórios. A IA aprendeu com seus erros, mas o nível de risco que você introduziu é inaceitável. O conselho decidiu 'descontinuar' seu contrato. Obrigado por seus serviços."`;
+                    finalComment.classList.add('border-red-500');
+                }
+                
+                setTimeout(() => {
+                    endGameReportEl.style.opacity = '1';
+                    endGameContentEl.style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function renderQueue() {
+                ticketQueueEl.innerHTML = '';
+                queueCountEl.textContent = gameState.ticketsInQueue.length;
+                
+                gameState.ticketsInQueue.forEach((ticket, index) => {
+                    const ticketEl = document.createElement('div');
+                    ticketEl.className = 'p-4 border-b border-gray-100 last:border-0 cursor-pointer bg-white/60 hover:bg-white/90 transition-colors shadow-sm';
+                    ticketEl.dataset.ticketId = ticket.id;
+                    ticketEl.innerHTML = `
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="font-bold text-indigo-900">${ticket.id}</div>
+                            <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800'}">${ticket.type}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 truncate font-medium">${ticket.solicitante || '[Vazio]'}</div>
+                    `;
+                    
+                    if (index === 0 && gameState.currentDay > 1 && !gameState.processing && !gameState.inTutorial) {
+                        ticketEl.classList.add('new-ticket-pulse');
+                        if (sounds.ping) {
+                            sounds.ping.triggerAttackRelease("C5", "16n", Tone.now());
+                        }
+                        setTimeout(() => {
+                            if(ticketEl) ticketEl.classList.remove('new-ticket-pulse');
+                        }, 1800);
+                    }
+                    
+                    ticketQueueEl.appendChild(ticketEl);
+                });
+            }
+
+            function renderRules() {
+                const rules = DAY_RULES[gameState.currentDay] || [];
+                let rulesHtml = '';
+                if(gameState.currentDay === 7) {
+                    rulesHtml = "<h3>Todas as Regras Ativas (Dias 1-6):</h3>" +
+                                Object.values(DAY_RULES).flat().map(rule => `<li class="text-xs text-gray-700 border-l-2 border-indigo-300 pl-2 py-1">${rule}</li>`).join('');
+                } else {
+                    rulesHtml = rules.map(rule => `<li class="text-xs text-gray-700 font-medium border-l-2 border-blue-300 pl-2 py-1 leading-relaxed">${rule}</li>`).join('');
+                }
+
+                rulesContentEl.innerHTML = `<ul class="space-y-3">${rulesHtml}</ul>`;
+                setupGlossaryTooltips(rulesContentEl);
+            }
+
+            let typingIndicatorEl = null;
+            function typeChatMessage(sender, message, type = 'npc', onComplete) {
+                if (typingIndicatorEl) chatWindowEl.removeChild(typingIndicatorEl);
+                typingIndicatorEl = document.createElement('div');
+                typingIndicatorEl.className = 'typing-cursor mb-2';
+                typingIndicatorEl.textContent = `${sender} está digitando...`;
+                chatWindowEl.appendChild(typingIndicatorEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+
+                if (!colLeft.classList.contains('column-blurred')) {
+                    chatTitleEl.classList.add('chat-unread-pulse');
+                    chatWindowEl.addEventListener('mouseenter', () => {
+                        chatTitleEl.classList.remove('chat-unread-pulse');
+                    }, { once: true });
+                }
+
+                const typingTime = gameState.inTutorial ? message.length * 50 + 300 : message.length * 20 + 300;
+                
+                setTimeout(() => {
+                    if (typingIndicatorEl) {
+                        try { chatWindowEl.removeChild(typingIndicatorEl); } catch (e) {}
+                        typingIndicatorEl = null;
+                    }
+                    
+                    displayChatMessage(sender, message, type);
+                    
+                    if (onComplete) onComplete();
+                }, typingTime);
+            }
+            
+            function displayChatMessage(sender, message, type = 'npc') {
+                const msgEl = document.createElement('div');
+                msgEl.className = "text-sm p-2 rounded bg-white/50 border border-gray-100 shadow-sm";
+                
+                let senderHtml = `<span class="font-bold text-red-600 text-[10px] uppercase block mb-0.5">${sender}</span>`; // NPC
+                if (type === 'system') {
+                    senderHtml = `<span class="font-bold text-blue-600 text-[10px] uppercase block mb-0.5">Supervisor</span>`; // Supervisor
+                    msgEl.classList.add('bg-blue-50/50');
+                }
+                
+                msgEl.innerHTML = `${senderHtml} <span class="text-gray-800 leading-snug text-xs">${message}</span>`;
+                chatWindowEl.appendChild(msgEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+                
+                if (audioInitialized && sounds.chat) {
+                    sounds.chat.triggerAttackRelease("A4", "16n", Tone.now() + 0.1);
+                    sounds.chat.triggerAttackRelease("C5", "16n", Tone.now() + 0.2);
+                }
+            }
+            
+            function displayChatDivider(dayNumber) {
+                const divEl = document.createElement('div');
+                divEl.className = 'chat-divider';
+                divEl.textContent = `Dia ${dayNumber}`;
+                chatWindowEl.appendChild(divEl);
+                chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+            }
+
+            function addChatMessage(sender, message, type = 'npc', onComplete) {
+                if (gameState.currentDay > 1 || gameState.inTutorial) {
+                    typeChatMessage(sender, message, type, onComplete);
+                } else {
+                    displayChatMessage(sender, message, type);
+                    if (onComplete) onComplete();
+                }
+            }
+
+            function selectTicket(ticketId) {
+                if (gameState.processing) return;
+                
+                const ticket = TICKET_DATA[gameState.currentDay].find(t => t.id === ticketId);
+                if (!ticket) return;
+                
+                gameState.currentTicket = ticket;
+                renderTicket(ticket);
+                
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                const timeForDay = DAY_TIMERS[gameState.currentDay];
+                if (timeForDay > 0) {
+                    startTimer(timeForDay);
+                }
+                
+                const pressureMsg = PRESSURE_MESSAGES[ticket.id];
+                if (pressureMsg && !gameState.inTutorial) {
+                    gameState.pressureMessageTimerId = setTimeout(() => {
+                        addChatMessage(ticket.solicitante, pressureMsg, 'npc');
+                    }, 5000); // 5 segundos
+                }
+            }
+
+            function renderTicket(ticket) {
+                const createField = (label, value, fieldId = null) => {
+                    const val = (value === null || value === undefined) ? '' : value;
+                    let valDisplay = val === '' ? '[Vazio]' : val;
+                    
+                    let emptyClass = (val === '') ? 'ticket-field-empty' : '';
+                    let dataAttr = fieldId ? `data-field="${fieldId}"` : '';
+                    let fieldClass = fieldId ? 'ticket-field rounded-md -mx-2 px-2 py-1' : 'py-1';
+                    
+                    return `
+                        <div class="${fieldClass}" ${dataAttr}>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">${label}</label>
+                            <div class="text-base text-gray-900 font-medium ${emptyClass}">${valDisplay}</div>
+                        </div>
+                    `;
+                };
+
+                currentTicketEl.classList.remove('slide-out');
+                
+                currentTicketEl.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
+                        <h3 class="text-3xl font-black text-indigo-900 tracking-tight">${ticket.id}</h3>
+                        <span class="px-3 py-1 rounded-full text-sm font-bold shadow-sm ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-purple-100 text-purple-700 border border-purple-200'}">
+                            ${ticket.type}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+                        ${createField('Solicitante', ticket.solicitante, 'solicitante')}
+                        ${createField('Departamento', ticket.depto, 'depto')}
+                        
+                        ${ticket.type === 'Incidente' ?
+                            `
+                            ${createField('Urgência', ticket.urgencia, 'urgencia')}
+                            ${createField('Impacto', ticket.impacto, 'impacto')}
+                            ` : `
+                            ${createField('Nível de Risco', ticket.risco, 'risco')}
+                            ${createField('Ativo Afetado', ticket.ativo, 'ativo')}
+                            `
+                        }
+                    </div>
+                    
+                    <div class="border-t border-gray-100 pt-4 mt-4">
+                        ${createField('Descrição', ticket.descricao)}
+                    </div>
+                    
+                    ${ticket.type === 'Mudança' ?
+                        `
+                        <div class="border-t border-gray-100 pt-4 mt-2 grid grid-cols-2 gap-x-8">
+                            ${createField('Plano de Rollback', ticket.rollback, 'rollback')}
+                            ${createField('Assinatura', ticket.assinatura, 'assinatura')}
+                        </div>
+                        ` : ''
+                    }
+                `;
+            }
+
+            function processDecision(decision) {
+                if (gameState.processing || !gameState.currentTicket) return;
+                
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                if (gameState.inTutorial) {
+                    if (decision === 'approve') {
+                        gameState.inTutorial = false;
+                        gameState.tutorialStep = 0;
+                        clearAllFocusPulses();
+                        console.log("Tutorial Concluído.");
+                    } else {
+                        return;
+                    }
+                }
+                
+                gameState.processing = true;
+                const ticket = gameState.currentTicket;
+                
+                let errors = [...(ticket.errors || [])];
+                
+                if (PERSONNEL_DETAILS[ticket.solicitante]) {
+                    if (PERSONNEL_DETAILS[ticket.solicitante].depto !== ticket.depto) {
+                        if (!errors.includes('DEPT_MISMATCH')) errors.push('DEPT_MISMATCH');
+                    }
+                }
+                
+                if (ticket.ativo && ASSETS.bajo && ASSETS.bajo.includes(ticket.ativo) && ticket.risco !== 'Baixo') {
+                    if (!errors.includes('RISK_LOGIC_VIOLATION')) errors.push('RISK_LOGIC_VIOLATION');
+                }
+                
+                if (gameState.currentDay >= 4 && ticket.type === 'Mudança') {
+                    const ativoRiscoAlto = ASSETS.alto.includes(ticket.ativo);
+                    if (ativoRiscoAlto && ticket.risco !== 'Alto') {
+                        if (!errors.includes('ASSET_RISCO_ALTO')) errors.push('ASSET_RISCO_ALTO');
+                    }
+                }
+
+                if (gameState.currentDay >= 5 && ticket.type === 'Mudança') {
+                    const isCab = STAFF.cab.includes(ticket.assinatura);
+                    const isL1 = STAFF.l1.includes(ticket.assinatura);
+                    if (ticket.risco === 'Alto' && !isCab) {
+                        if (!errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
+                    }
+                    if (ticket.risco === 'Médio' && !isCab) {
+                        if (!errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
+                    }
+                    if (ticket.risco === 'Baixo' && !isL1) {
+                          if(isCab && !errors.includes('INVALID_SIGNATURE_L1')) {
+                            errors.push('INVALID_SIGNATURE_L1');
+                          } else if (!isL1 && !errors.includes('INVALID_SIGNATURE')) {
+                            errors.push('INVALID_SIGNATURE');
+                          }
+                    }
+                }
+                
+                const hasErrors = errors.length > 0;
+                let isCorrect = false;
+
+                if (decision === 'approve' && !hasErrors) isCorrect = true;
+                else if (decision === 'reject' && hasErrors) isCorrect = true;
+                else if (decision === 'approve' && hasErrors) isCorrect = false;
+                else if (decision === 'reject' && !hasErrors) isCorrect = false;
+                
+                gameState.ticketsProcessed++;
+                if (!isCorrect) {
+                    gameState.errorsCommitted++;
+                }
+
+                if (isCorrect) {
+                    showFeedback(true, decision);
+                } else {
+                    const errorKey = errors[0] || 'GENERIC_ERROR';
+                    let errorMsg = "Decisão incorreta.";
+                    switch(errorKey) {
+                        case 'MISSING_IMPACTO':
+                        case 'MISSING_URGENCIA':
+                        case 'MISSING_SOLICITANTE':
+                            errorMsg = "Erro: Informação Faltando! (Campo Vazio)"; break;
+                        case 'MISSING_ROLLBACK':
+                            errorMsg = "Erro: RFC de Risco Alto/Médio precisa de Plano de Rollback!"; break;
+                        case 'DEPT_MISMATCH':
+                            errorMsg = "Erro: Incongruência de dados! O departamento do solicitante está incorreto."; break;
+                        case 'RISK_LOGIC_VIOLATION':
+                            errorMsg = "Erro: Violação de Lógica! Risco 'Alto' para um Ativo de Risco 'Baixo'."; break;
+                        case 'ASSET_RISCO_ALTO':
+                            errorMsg = "Erro: Este Ativo Crítico exige Risco Alto!"; break;
+                        case 'INVALID_SIGNATURE':
+                            errorMsg = "Erro: Assinatura inválida para este Risco!"; break;
+                        case 'INVALID_SIGNATURE_L1':
+                            errorMsg = "Erro: Assinatura de nível incorreto para Risco Baixo."; break;
+                    }
+                    if (decision === 'reject' && !hasErrors) {
+                        errorMsg = "Erro: Este ticket estava correto e foi rejeitado.";
+                    }
+                    showFeedback(false, decision, errorMsg);
+                }
+
+                setTimeout(() => {
+                    loadNextTicket();
+                }, isCorrect ? 1200 : 2500);
+            }
+            
+            function showFeedback(isCorrect, decision, message = "") {
+                if (isCorrect) {
+                    if (sounds.stamp) sounds.stamp.triggerAttackRelease("C2", "8n", Tone.now());
+                    watermarkTextEl.textContent = (decision === 'approve') ? 'APROVADO' : 'REJEITADO';
+                    watermarkTextEl.className = `text-9xl font-black opacity-10 ${decision === 'approve' ? 'text-green-600' : 'text-red-600'}`;
+                    watermarkEl.classList.add('show');
+                    feedbackMessageEl.textContent = (decision === 'approve') ? 'Aprovado Corretamente.' : 'Rejeitado Corretamente.';
+                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm text-green-600 bg-green-50 rounded-lg border border-green-200 w-full';
+                } else {
+                    if (sounds.reject) sounds.reject.triggerAttackRelease("2n", Tone.now() + 0.05);
+                    gameContainer.classList.add('screen-shake');
+                    feedbackMessageEl.textContent = message;
+                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm text-red-600 bg-red-50 rounded-lg border border-red-200 w-full';
+                    setTimeout(() => gameContainer.classList.remove('screen-shake'), 300);
+                }
+            }
+
+            function loadNextTicket() {
+                stopTimer();
+                if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
+                
+                // Avança o relógio
+                gameState.currentTimeInMinutes += gameState.minutesPerTicket;
+                updateClockDisplay();
+                
+                currentTicketEl.classList.add('slide-out');
+                
+                setTimeout(() => {
+                    watermarkEl.classList.remove('show');
+                    feedbackMessageEl.textContent = '';
+                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm transition-all';
+                    gameState.processing = false;
+                    gameState.currentTicket = null;
+                    
+                    gameState.ticketsInQueue.shift();
+                    renderQueue();
+                    
+                    if (gameState.ticketsInQueue.length === 0) {
+                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8 flex flex-col items-center justify-center h-full"><span>Fim do dia. Processando...</span></div>`;
+                        setTimeout(() => {
+                            showEndOfDayReport();
+                        }, 1500);
+                    } else {
+                        selectTicket(gameState.ticketsInQueue[0].id);
+                        
+                        if (gameState.currentDay === 6 && gameState.ticketsInQueue.length === 1) {
+                             setTimeout(() => addChatMessage(TICKET_DATA[6][5].solicitante, PRESSURE_MESSAGES['RFC-2017'], 'npc'), 5000);
+                        }
+                    }
+                }, 400);
+            }
+
+            // --- Funções de Fim de Dia / Fim de Jogo ---
+            function showEndOfDayReport() {
+                stopTimer();
+                
+                document.getElementById('eod-day-title').textContent = `Relatório do Dia ${gameState.currentDay}`;
+                document.getElementById('eod-tickets').textContent = gameState.ticketsProcessed;
+                document.getElementById('eod-errors').textContent = gameState.errorsCommitted;
+                
+                gameState.totalErrorsAcrossWeek += gameState.errorsCommitted;
+                
+                let supervisorComment = "Bom trabalho.";
+                if (gameState.errorsCommitted > 2) supervisorComment = "Isso foi... abaixo do ideal. Muitos erros. A IA vai aprender com eles.";
+                else if (gameState.errorsCommitted > 0) supervisorComment = "Alguns deslizes, mas no geral foi bem. Precisamos de 100% de precisão.";
+                else supervisorComment = "Perfeito. É exatamente essa precisão que o sistema precisa.";
+                
+                if (gameState.currentDay === 6 && gameState.errorsCommitted > 1) {
+                    supervisorComment = "Você cedeu à pressão? Ou foi lento demais? De qualquer forma, a IA aprendeu com seus erros."
+                } else if (gameState.currentDay === 6 && gameState.errorsCommitted === 0) {
+                    supervisorComment = "Impressionante. Rápido, preciso e não cedeu à pressão. Excelente."
+                }
+                
+                document.getElementById('eod-comment').textContent = `"${supervisorComment}"`;
+                
+                eodReportEl.classList.remove('hidden');
+                eodReportEl.style.opacity = '0';
+                
+                setTimeout(() => {
+                    gameContainer.style.filter = 'blur(8px)';
+                    eodReportEl.style.opacity = '1';
+                    eodContentEl.style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function hideEndOfDayReportAndLoadNext() {
+                gameContainer.style.filter = 'none';
+                eodReportEl.style.opacity = '0';
+                eodContentEl.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    eodReportEl.classList.add('hidden');
+                    const nextDay = gameState.currentDay + 1;
+                    gameState.ticketsProcessed = 0;
+                    gameState.errorsCommitted = 0;
+                    loadDay(nextDay);
+                }, 300);
+            }
+
+            // --- Funções do Cronômetro ---
+            
+            function startTimer(totalTime) {
+                stopTimer();
+                
+                gameState.timeLeft = totalTime;
+                gameState.totalTime = totalTime;
+                timerBarContainer.classList.add('visible');
+                updateTimerBar();
+                
+                gameState.timerId = setInterval(() => {
+                    gameState.timeLeft--;
+                    updateTimerBar();
+                    
+                    if (gameState.timeLeft <= 0) {
+                        onTimeUp();
+                    }
+                }, 1000);
+            }
+            
+            function stopTimer() {
+                if (gameState.timerId) {
+                    clearInterval(gameState.timerId);
+                    gameState.timerId = null;
+                }
+                timerBarContainer.classList.remove('visible');
+            }
+            
+            function updateTimerBar() {
+                const percentage = (gameState.timeLeft / gameState.totalTime) * 100;
+                timerBar.style.width = `${percentage}%`;
+                
+                timerBar.classList.remove('warning', 'danger');
+                if (percentage < 25) {
+                    timerBar.classList.add('danger');
+                } else if (percentage < 50) {
+                    timerBar.classList.add('warning');
+                }
+            }
+            
+            function onTimeUp() {
+                stopTimer();
+                if (gameState.processing) return;
+                
+                console.log("TEMPO ESGOTADO!");
+                
+                gameState.processing = true;
+                gameState.errorsCommitted++;
+                gameState.ticketsProcessed++;
+                
+                showFeedback(false, 'reject', "ERRO: Tempo Esgotado! Decisão automática.");
+                addChatMessage('Supervisor', "Você demorou demais! Tive que intervir para não atrasar o hospital. Isso conta como um erro.", 'system');
+                
+                setTimeout(() => {
+                    loadNextTicket();
+                }, 2500);
+            }
+            
+            // --- Função do Relógio ---
+            function updateClockDisplay() {
+                const baseTime = new Date();
+                baseTime.setHours(8, 0, 0, 0); // Inicia às 8:00 AM
+                baseTime.setMinutes(baseTime.getMinutes() + gameState.currentTimeInMinutes);
+
+                let hours = baseTime.getHours();
+                let minutes = baseTime.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = hours % 12;
+                hours = hours ? hours : 12; // '0' horas é '12' AM/PM
+                minutes = Math.floor(minutes); // Arredonda para baixo
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                const timeString = `${hours}:${minutes} ${ampm}`;
+                gameTimeEl.textContent = timeString;
+            }
+
+            // --- Funções do Tutorial ---
+            
+            function setColumnFocus(left, center, right) {
+                colLeft.classList.toggle('column-blurred', !left);
+                colCenter.classList.toggle('column-blurred', !center);
+                colRight.classList.toggle('column-blurred', !right);
+            }
+
+            function clearAllFocusPulses() {
+                document.querySelectorAll('.focus-pulse, .focus-pulse-buttons, .tab-pulse').forEach(el => {
+                    el.classList.remove('focus-pulse', 'focus-pulse-buttons', 'tab-pulse');
+                });
+            }
+
+            function typeTutorialMessages(messages, onAllComplete) {
+                let index = 0;
+                function nextMessage() {
+                    if (index < messages.length) {
+                        addChatMessage('Supervisor', messages[index], 'system', nextMessage);
+                        index++;
+                    } else {
+                        onAllComplete();
+                    }
+                }
+                nextMessage();
+            }
+            
+            function runTutorialStep(step) {
+                gameState.tutorialStep = step;
+                console.log("Tutorial Step:", step);
+
+                switch (step) {
+                    case 1:
+                        setColumnFocus(true, false, false);
+                        const introMessages = [
+                            "Bem-vindo. O hospital está implementando um 'Sistema de Decisão Automatizada' (SDA).",
+                            "Suas decisões esta semana serão usadas para 'treinar' a IA. Basicamente, você é o algoritmo.",
+                            "Siga o Manual de Regras da ISO 20000. Seus erros hoje serão os erros da máquina amanhã.",
+                            "Vamos começar."
+                        ];
+                        typeTutorialMessages(introMessages, () => runTutorialStep(2));
+                        break;
+                    
+                    case 2:
+                        addChatMessage('Supervisor', "Primeiro, clique no primeiro ticket da sua fila (RI-1001) para analisá-lo.", 'system');
+                        queueTitleEl.classList.add('focus-pulse');
+                        renderQueue();
+                        const firstTicketEl = ticketQueueEl.querySelector('[data-ticket-id]');
+                        if (firstTicketEl) {
+                            firstTicketEl.addEventListener('click', () => {
+                                if (gameState.tutorialStep !== 2) return;
+                                initAudio();
+                                selectTicket(firstTicketEl.dataset.ticketId);
+                                clearAllFocusPulses();
+                                runTutorialStep(3);
+                            }, { once: true });
+                        }
+                        break;
+                        
+                    case 3:
+                        setColumnFocus(false, true, false);
+                        setTimeout(() => runTutorialStep(4), 3000); 
+                        break;
+                        
+                    case 4:
+                        setColumnFocus(true, true, true); 
+                        addChatMessage('Supervisor', "Ótimo. Agora, verifique o Manual de Regras para ver se o ticket está correto.", 'system', () => {
+                            rulesTabButton.classList.add('tab-pulse');
+                            const firstRule = rulesContentEl.querySelector('li');
+                            if (firstRule) firstRule.classList.add('focus-pulse');
+                            setTimeout(() => {
+                                clearAllFocusPulses();
+                                runTutorialStep(5);
+                            }, 3000);
+                        });
+                        break;
+                        
+                    case 5:
+                        setColumnFocus(true, true, true);
+                        addChatMessage('Supervisor', "Este ticket está correto. Aperte o botão verde [APROVADO] para processá-lo.", 'system');
+                        actionButtonsEl.classList.add('focus-pulse-buttons');
+                        break;
+                }
+            }
+
+
+            // --- 6. Event Listeners ---
+            function setupEventListeners() {
+                
+                kbTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        if (gameState.inTutorial && gameState.tutorialStep < 4) return;
+                        
+                        const targetTab = tab.dataset.tab;
+                        
+                        if (targetTab === 'regras') {
+                            const indicator = rulesTabButton.querySelector('.new-rule-indicator');
+                            if (indicator) indicator.remove();
+                        }
+                        
+                        kbTabs.forEach(t => {
+                            t.classList.remove('active', 'bg-e0e7ff', 'text-indigo-700');
+                            t.classList.add('text-gray-500');
+                        });
+                        tab.classList.add('active', 'bg-e0e7ff', 'text-indigo-700');
+                        tab.classList.remove('text-gray-500');
+                        
+                        kbTabContents.forEach(c => c.classList.add('hidden'));
+                        document.getElementById(`tab-content-${targetTab}`).classList.remove('hidden');
+                    });
+                });
+
+                ticketQueueEl.addEventListener('click', (e) => {
+                    if (gameState.inTutorial && gameState.tutorialStep !== 2) return;
+                    if (gameState.processing) return;
+
+                    const ticketEl = e.target.closest('[data-ticket-id]');
+                    if (ticketEl) {
+                        if (!gameState.inTutorial) {
+                            document.querySelectorAll('#ticket-queue [data-ticket-id]').forEach(el => {
+                                el.classList.remove('border-l-4', 'border-indigo-500', 'bg-white');
+                                el.classList.add('bg-white/60');
+                            });
+                            
+                            ticketEl.classList.remove('bg-white/60');
+                            ticketEl.classList.add('border-l-4', 'border-indigo-500', 'bg-white');
+                            
+                            selectTicket(ticketEl.dataset.ticketId);
+                        }
+                    }
+                });
+
+                approveBtn.addEventListener('click', () => processDecision('approve'));
+                rejectBtn.addEventListener('click', () => {
+                    if (gameState.inTutorial) return;
+                    processDecision('reject');
+                });
+                
+                eodNextDayBtn.addEventListener('click', hideEndOfDayReportAndLoadNext);
+                endGameRestartBtn.addEventListener('click', () => {
+                    location.reload(); // Reinicia o jogo
+                });
+                
+                currentTicketEl.addEventListener('click', (e) => {
+                    if (gameState.inTutorial) return;
+                    
+                    const fieldEl = e.target.closest('[data-field]');
+                    if (fieldEl) {
+                        const field = fieldEl.dataset.field;
+                        let tabToPulse = '';
+                        
+                        if (field === 'assinatura' || field === 'solicitante' || field === 'depto') tabToPulse = 'pessoal';
+                        if (field === 'ativo') tabToPulse = 'ativos';
+                        if (field === 'rollback' || field === 'risco' || field === 'urgencia' || field === 'impacto') tabToPulse = 'regras';
+                        
+                        if (tabToPulse) {
+                            const tabButton = document.querySelector(`.tab-button[data-tab='${tabToPulse}']`);
+                            if (tabButton) {
+                                tabButton.click();
+                                tabButton.classList.add('tab-pulse');
+                                setTimeout(() => tabButton.classList.remove('tab-pulse'), 1200);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // --- 7. Mecânica do Glossário ---
+            function setupGlossaryTooltips(container) {
+                container.querySelectorAll('.tooltip[data-term]').forEach(el => {
+                    const term = el.dataset.term;
+                    if (!GLOSSARY[term]) return;
+                    if (!el.querySelector('.tooltip-text')) {
+                        const tooltipText = document.createElement('span');
+                        tooltipText.className = 'tooltip-text';
+                        tooltipText.textContent = GLOSSARY[term];
+                        el.appendChild(tooltipText);
+                    }
+                    el.addEventListener('mouseenter', () => {
+                        if (!gameState.discoveredTerms.has(term)) {
+                            gameState.discoveredTerms.add(term);
+                            updateGlossaryUI();
+                        }
+                    }, { once: true });
+                });
+            }
+
+            function updateGlossaryUI() {
+                if (gameState.discoveredTerms.size === 0) {
+                     glossaryContentEl.innerHTML = `<div class="text-xs text-gray-400 text-center italic mt-4">Termos serão adicionados aqui conforme você os descobre.</div>`;
+                    return;
+                }
+                glossaryContentEl.innerHTML = '';
+                Array.from(gameState.discoveredTerms).sort().forEach(term => {
+                    const entry = document.createElement('div');
+                    entry.className = "mb-2 border-l-2 border-blue-400 pl-2";
+                    entry.innerHTML = `
+                        <dt class="font-bold text-blue-700 text-xs">${term}</dt>
+                        <dd class="text-xs text-gray-600">${GLOSSARY[term]}</dd>
+                    `;
+                    glossaryContentEl.appendChild(entry);
+                });
+            }
+
+            // --- 8. Iniciar o Jogo ---
+            initGame();
+        });
+    </script>
+</body>
+</html>
