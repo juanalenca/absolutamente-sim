@@ -3,100 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISO 20000 - Process vs. Pressure</title>
-    
-    <!-- 1. Tailwind CSS -->
+    <title>ISO 20000 - Process vs. Pressure (Glitch Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. Tone.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
-    <!-- 3. Estilos e Animações Customizadas -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         
-        /* --- CURSOR MAC-STYLE --- */
-        html, body, button, a, input, select, .ticket-field {
-            cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2L18.5 15.5L12.5 15.5L16 22.5L13.5 23.5L10 16.5L4.5 21L5.5 2Z" fill="black" stroke="white" stroke-width="1.5"/></svg>'), auto !important;
-        }
-        .ticket-field:hover, .action-button:hover, .tab-button:hover, .ticket-item:hover {
-            cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2C7.3 2 6 3.3 6 5V12.5C6 12.2 5.8 12 5.5 12C5.2 12 5 12.2 5 12.5V16C5 18.8 7.2 21 10 21H14C16.8 21 19 18.8 19 16V9.5C19 9.2 18.8 9 18.5 9C18.2 9 18 9.2 18 9.5V12H16V7.5C16 7.2 15.8 7 15.5 7C15.2 7 15 7.2 15 7.5V12H13V4.5C13 4.2 12.8 4 12.5 4C12.2 4 12 4.2 12 4.5V12H10V5C10 4.4 9.6 4 9 4C8.4 4 8 4.4 8 5V12H6V5C6 3.3 7.3 2 9 2Z" fill="black" stroke="white" stroke-width="1.5"/></svg>'), pointer !important;
+        /* --- VISUAL: CURSOR MAC-STYLE --- */
+        :root {
+            --cursor-svg: url("data:image/svg+xml;charset=utf-8,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.5 2.5L11.5 19.5L14.5 12.5L21.5 9.5L5.5 2.5Z' fill='black' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
         }
 
-        /* --- SCROLLBAR CUSTOMIZADA --- */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.5);
-            border-radius: 10px;
-            transition: background 0.3s;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(107, 114, 128, 0.8);
-        }
-
-        /* --- BASE & TYPOGRAPHY --- */
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 10% 20%, rgb(240, 244, 255) 0%, rgb(225, 230, 245) 90%);
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
             overflow: hidden;
-            color: #111827;
+            cursor: var(--cursor-svg), auto !important;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            color: #1f2937;
         }
 
+        button, .ticket-field, .tab-button, .start-btn {
+            cursor: var(--cursor-svg), pointer !important;
+        }
+
+        /* --- VISUAL: SCROLLBARS --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* --- LAYOUT PRINCIPAL --- */
         #game-container {
             display: grid;
-            /* Ajuste de Grid: Aumentei a primeira coluna (1.3fr) para dar espaço à fila */
-            grid-template-columns: 1.3fr 2.1fr 1.1fr;
+            grid-template-columns: 1fr 2.2fr 1.2fr;
             gap: 1.5rem;
             height: 100vh;
             padding: 1.5rem;
-            transition: filter 0.3s ease-out;
+            transition: filter 0.2s; /* Rápido para o glitch */
         }
 
-        /* --- GLASSMORPHISM UI --- */
+        /* Classe para borrar o fundo quando o menu está ativo */
+        .background-blur {
+            filter: blur(10px) grayscale(40%);
+            opacity: 0.4;
+            pointer-events: none;
+            transform: scale(0.98);
+        }
+
+        /* --- EFEITO GLITCH (RGB SPLIT) --- */
+        @keyframes glitch-anim {
+            0% { text-shadow: -2px 0 #ff0000, 2px 0 #0000ff; transform: translate(2px, 0); filter: contrast(2); }
+            20% { text-shadow: 2px 0 #ff0000, -2px 0 #0000ff; transform: translate(-2px, 0); }
+            40% { text-shadow: -2px 0 #ff0000, 2px 0 #0000ff; transform: translate(0, 0); filter: contrast(1.5); }
+            100% { text-shadow: none; transform: none; filter: none; }
+        }
+
+        .system-glitch {
+            animation: glitch-anim 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            position: relative;
+        }
+        
+        .system-glitch::before {
+            content: "SYSTEM FAILURE";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.1);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* --- EFEITO COMBO/STREAK --- */
+        .streak-glow {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(96, 165, 250, 0.3) !important;
+            border-color: #3b82f6 !important;
+            transition: box-shadow 0.5s ease;
+        }
+
+        /* --- TELA DE INÍCIO --- */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(224, 231, 255, 0.2);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        #start-screen.hidden-screen {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+        }
+
+        .start-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255,255,255,0.5) inset;
+            padding: 3.5rem;
+            border-radius: 2.5rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* --- GAME COLUMNS --- */
         .game-column {
-            background: rgba(255, 255, 255, 0.75);
+            background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 1rem;
             box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
-                0 2px 4px -1px rgba(0, 0, 0, 0.03),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+                0 10px 15px -3px rgba(0, 0, 0, 0.05), 
+                0 4px 6px -2px rgba(0, 0, 0, 0.025),
+                inset 0 0 0 1px rgba(255,255,255,0.5);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             transition: all 0.3s ease;
         }
         
-        /* --- BOTÕES & AÇÕES (POP EFFECT) --- */
-        .action-button {
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
-            border: none;
-            position: relative;
-            top: 0;
-        }
-        .action-button:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-            filter: brightness(1.05);
-            z-index: 10;
-        }
-        .action-button:active {
-            transform: translateY(1px) scale(0.98);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            filter: brightness(0.95);
-        }
-
         /* Abas */
         .tab-button {
             border-radius: 0.5rem;
@@ -105,82 +147,59 @@
             border: 1px solid transparent;
         }
         .tab-button.active {
-            background-color: #e0e7ff;
-            color: #4338ca;
-            border-color: #c7d2fe;
+            background-color: #eef2ff;
+            color: #4f46e5;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-color: #c7d2fe;
         }
         .tab-button:not(.active):hover {
-            background-color: rgba(255,255,255,0.8);
-            color: #1f2937;
-        }
-
-        /* Ticket Queue Item Styling */
-        #ticket-queue > div {
-            border-radius: 0.5rem;
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            background-color: rgba(255, 255, 255, 0.5);
-            transition: all 0.2s ease;
-        }
-        #ticket-queue > div:hover {
-            background-color: rgba(239, 246, 255, 0.9);
-            transform: translateX(2px);
-            border-color: #bfdbfe;
-        }
-
-        /* Mesa de Trabalho */
-        #current-ticket {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-            animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            background-color: #f9fafb;
+            color: #374151;
         }
 
         /* Cronômetro */
         #timer-bar-container {
             width: 100%;
             height: 6px;
-            background-color: rgba(229, 231, 235, 0.5);
+            background-color: #e5e7eb;
             border-radius: 99px;
             margin-top: 12px;
             margin-bottom: 12px;
             overflow: hidden;
             opacity: 0;
             transition: opacity 0.3s;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
         }
-        #timer-bar-container.visible {
-            opacity: 1;
-        }
+        #timer-bar-container.visible { opacity: 1; }
         #timer-bar {
             height: 100%;
             width: 100%;
             background: linear-gradient(90deg, #22c55e, #4ade80);
             border-radius: 99px;
             transition: width 1s linear, background 0.5s;
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
         }
         #timer-bar.warning {
-            background: linear-gradient(90deg, #f97316, #fb923c);
-            box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+            background: linear-gradient(90deg, #f97316, #fbbf24);
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
         }
         #timer-bar.danger {
             background: linear-gradient(90deg, #ef4444, #f87171);
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
 
-        /* Efeitos Visuais Gerais */
+        /* Efeitos Visuais */
         .column-blurred {
-            filter: blur(6px) grayscale(0.5);
+            filter: blur(4px) grayscale(20%);
             opacity: 0.5;
             pointer-events: none;
             transform: scale(0.98);
         }
         .focus-pulse {
             border-radius: 0.5rem;
+            animation: focus-pulse 1.5s infinite;
             position: relative;
             z-index: 20;
-            animation: focus-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         @keyframes focus-pulse {
             0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
@@ -189,24 +208,26 @@
         }
         .focus-pulse-buttons {
             border-radius: 0.5rem;
-            animation: focus-pulse-buttons 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            animation: focus-pulse-buttons 1.5s infinite;
         }
-         @keyframes focus-pulse-buttons {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        @keyframes focus-pulse-buttons {
+            0% { box-shadow: 0 0 0 0 rgba(46, 184, 90, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(46, 184, 90, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 184, 90, 0); }
         }
+
+        /* Notificações e Cursores */
         .new-ticket-pulse {
-            animation: pulse 0.8s 3;
+            animation: pulse 0.6s 3;
+            border-color: #60a5fa !important;
+            background-color: #eff6ff !important;
         }
-        .chat-unread-pulse {
-            position: relative;
-        }
+        .chat-unread-pulse { position: relative; }
         .chat-unread-pulse::after {
             content: '';
             position: absolute;
-            top: 0;
-            right: -8px;
+            top: -2px;
+            right: -12px;
             width: 10px;
             height: 10px;
             background-color: #f97316;
@@ -216,156 +237,147 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         @keyframes fast-pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(0.9); opacity: 0.8; }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
-        .typing-cursor {
-            font-style: italic;
-            color: #6b7280;
-            font-size: 0.875rem;
-            padding: 0.5rem;
-            background: rgba(243, 244, 246, 0.5);
-            border-radius: 0.5rem;
-            display: inline-block;
-        }
+        .typing-cursor { font-style: italic; color: #6b7280; font-size: 0.85rem; }
         .typing-cursor::after {
             content: '●';
-            color: #3b82f6;
+            font-size: 0.6rem;
             animation: blink 1s step-end infinite;
             margin-left: 4px;
-            font-size: 0.75rem;
+            vertical-align: middle;
         }
         @keyframes blink { 50% { opacity: 0; } }
 
         .ticket-field-empty .text-lg {
-            background-color: rgba(249, 250, 251, 0.8);
-            border: 1px dashed #d1d5db;
-            min-height: 1.75rem;
+            background-color: #f9fafb;
+            border: 2px dashed #d1d5db;
+            min-height: 2rem;
             color: #9ca3af;
-            border-radius: 0.25rem;
+            border-radius: 0.375rem;
             display: flex;
             align-items: center;
             padding-left: 0.5rem;
         }
 
-        .tab-pulse {
-            animation: pulse-bg 0.6s 2;
+        /* Botões */
+        .action-button {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255,255,255,0.2);
         }
+        .action-button:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            filter: brightness(1.05);
+        }
+        .action-button:active {
+            transform: translateY(1px) scale(0.98);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-pulse { animation: pulse-bg 0.6s 2; }
         @keyframes pulse-bg {
-            0% { background-color: #e0e7ff; }
+            0% { background-color: #eef2ff; }
             50% { background-color: #c7d2fe; }
-            100% { background-color: #e0e7ff; }
+            100% { background-color: #eef2ff; }
         }
-        .screen-shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
-            40%, 60% { transform: translate3d(3px, 0, 0); }
-        }
+        
         #watermark {
             opacity: 0;
-            transform: scale(1.3) rotate(-10deg);
+            transform: scale(1.5) rotate(-12deg);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         #watermark.show {
             opacity: 1;
-            transform: scale(1) rotate(-5deg);
+            transform: scale(1) rotate(-12deg);
         }
+        
         #current-ticket {
-            animation: slideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: slideIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.3s ease;
         }
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        #current-ticket.slide-out {
-            animation: slideOut 0.4s ease-in forwards;
-        }
+        #current-ticket.slide-out { animation: slideOut 0.3s ease-in forwards; }
         @keyframes slideOut {
             from { opacity: 1; transform: translateX(0); }
-            to { opacity: 0; transform: translateX(40px); }
+            to { opacity: 0; transform: translateX(30px); }
         }
         
-        /* --- TOOLTIPS CORRIGIDOS --- */
         .tooltip {
             position: relative;
             cursor: help;
-            text-decoration: none;
-            border-bottom: 2px dotted #60a5fa;
-            transition: border-color 0.2s;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-decoration-color: #3b82f6;
+            text-underline-offset: 2px;
         }
-        .tooltip:hover {
-            border-bottom-color: #2563eb;
-        }
-        /* Tooltip Text: Ajustado para não sobrepor ou vazar */
         .tooltip .tooltip-text {
             visibility: hidden;
-            width: max-content;
-            max-width: 200px; /* Limite de largura para não quebrar o layout */
-            background-color: rgba(31, 41, 55, 0.98);
-            backdrop-filter: blur(4px);
-            color: #fff;
+            width: 300px;
+            background-color: #1e293b; /* Cor escura */
+            color: #f8fafc;
             text-align: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            position: absolute;
-            z-index: 100; /* Z-index alto */
-            opacity: 0;
-            transition: all 0.2s ease-out;
-            font-size: 0.75rem;
-            font-weight: 500;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            line-height: 1.4;
-            white-space: normal;
+            border-radius: 0.75rem;
+            padding: 1rem;
             
-            /* Posicionamento: Acima do texto */
-            bottom: 120%;
+            //POSITION FIXED
+            position: fixed; 
+            z-index: 9999; /* Garante que fique acima de TUDO */
+            
+            /* Centraliza na tela (muito mais chique e legível) */
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%) translateY(5px);
+            transform: translate(-50%, -50%) scale(0.9);
+            
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255,255,255,0.1);
             pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Removemos a setinha (triângulo) pois agora ele flutua no centro */
+        .tooltip .tooltip-text::after {
+            display: none;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1); /* Pequeno efeito de zoom */
         }
         .tooltip .tooltip-text::after {
             content: "";
             position: absolute;
-            top: 100%; /* Seta em baixo */
+            bottom: 100%;
             left: 50%;
-            margin-left: -6px;
-            border-width: 6px;
+            margin-left: -5px;
+            border-width: 5px;
             border-style: solid;
-            border-color: rgba(31, 41, 55, 0.98) transparent transparent transparent;
+            border-color: transparent transparent #1e293b transparent;
         }
         .tooltip:hover .tooltip-text {
             visibility: visible;
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(4px);
         }
 
-        .ticket-field {
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            border-radius: 0.375rem;
-        }
-        .ticket-field:hover {
-            background-color: rgba(243, 244, 246, 0.8);
-            transform: scale(1.01);
-        }
+        .ticket-field { cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
+        .ticket-field:hover { background-color: #eff6ff; border-radius: 0.375rem; }
+        .ticket-field:active { transform: scale(0.98); }
 
-        .report-screen {
-            background: rgba(17, 24, 39, 0.85);
-            backdrop-filter: blur(8px);
-            transition: opacity 0.4s ease-in-out;
-        }
-        .report-content {
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.9);
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(255, 255, 255, 1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        .report-screen { transition: opacity 0.3s ease-in-out; backdrop-filter: blur(5px); }
+        .report-content { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(0.9); border-radius: 1.5rem; }
         
         .chat-divider {
             font-size: 0.7rem;
@@ -374,64 +386,72 @@
             letter-spacing: 0.05em;
             text-align: center;
             color: #9ca3af;
-            padding: 1rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            position: relative;
         }
         .chat-divider::before, .chat-divider::after {
             content: '';
+            display: inline-block;
+            width: 20px;
             height: 1px;
-            background: #e5e7eb;
-            flex: 1;
-            margin: 0 10px;
-        }
-        
-        #chat-window div:not(.chat-divider) {
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
+            background-color: #e5e7eb;
+            vertical-align: middle;
+            margin: 0 8px;
         }
     </style>
 </head>
-<body>
+<body class="text-gray-800">
 
-    <!-- Container principal do jogo -->
-    <div id="game-container">
+    <div id="start-screen">
+        <div class="start-card">
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center shadow-xl mb-6 transform rotate-3">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h1 class="text-4xl font-black text-gray-900 tracking-tight mb-2">ISO 20000</h1>
+                <h2 class="text-lg font-bold text-blue-600 uppercase tracking-widest">Sistema de Decisão Automatizada</h2>
+            </div>
+            
+            <p class="text-gray-600 mb-8 leading-relaxed font-medium">
+                Bem-vindo ao protocolo de treinamento S.D.A.<br>
+                Você atuará como o algoritmo central. Suas decisões sobre <span class="text-gray-900 font-bold">Incidentes</span> e <span class="text-gray-900 font-bold">Mudanças</span> definirão a eficiência do hospital.
+            </p>
 
-        <!-- ============================================= -->
-        <!-- COLUNA ESQUERDA (Fila & Comunicação)          -->
-        <!-- ============================================= -->
+            <button id="start-game-btn" class="action-button w-full py-5 bg-gray-900 hover:bg-black text-white font-bold text-lg rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-3 group">
+                <span>INICIAR TURNO</span>
+                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+            </button>
+            
+            <p class="mt-6 text-xs text-gray-400 font-medium">Recomendado: Ativar som para notificações</p>
+        </div>
+    </div>
+
+    <div id="game-container" class="background-blur">
+
         <div id="col-left" class="game-column">
-            <div id="game-info" class="p-4 border-b border-gray-200/50 text-center bg-white/30">
-                <h2 class="text-lg font-black text-indigo-600 tracking-tight">Absolutamente SIM!</h2>
-                <div id="game-day" class="text-3xl font-bold text-gray-800 mt-1 tracking-tighter">Dia 1</div>
-                <!-- O relógio dinâmico -->
-                <div id="game-time" class="text-xs font-semibold text-gray-500 mt-1 bg-gray-100/50 inline-block px-3 py-1 rounded-full">08:00 AM</div>
+            <div id="game-info" class="p-6 border-b border-gray-100 text-center bg-white/50">
+                <h2 class="text-xl font-black text-blue-600 tracking-tight">Absolutamente SIM!</h2>
+                <div id="game-day" class="text-4xl font-black text-gray-800 mt-1">Dia 1</div>
+                <div id="game-time" class="text-sm font-semibold text-gray-500 mt-1 tracking-wide">08:00 AM</div>
             </div>
 
-            <div class="flex-shrink-0 p-3 border-b border-gray-200/50 bg-white/20">
-                <h3 id="queue-title" class="font-bold text-gray-700 flex items-center text-sm">
+            <div class="flex-shrink-0 p-4 border-b border-gray-100 bg-white/30">
+                <h3 id="queue-title" class="font-bold text-gray-700 text-sm uppercase tracking-wider flex justify-between items-center">
                     Fila de Tickets 
-                    <span id="queue-count" class="ml-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    <span id="queue-count" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">0</span>
                 </h3>
             </div>
-            <!-- Aumentado flex-grow para dar prioridade visual à fila -->
-            <div id="ticket-queue" class="flex-grow-[2] overflow-y-auto p-3 space-y-3">
-                <!-- Tickets serão injetados aqui pelo JS -->
-            </div>
+            <div id="ticket-queue" class="flex-grow overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                </div>
 
-            <div class="flex-shrink-0 p-2 border-t border-gray-200/50 bg-gray-50/30">
-                <h3 id="chat-title" class="font-bold text-gray-400 inline-block text-[10px] uppercase tracking-wide pl-2">Chat Interno</h3>
+            <div class="flex-shrink-0 p-4 border-t border-gray-100 bg-white/30">
+                <h3 id="chat-title" class="font-bold text-gray-700 text-sm uppercase tracking-wider inline-block">Chat Interno</h3>
             </div>
-            <!-- Reduzido flex-grow para o chat ocupar menos espaço -->
-            <div id="chat-window" class="flex-grow-[1] overflow-y-auto p-3 space-y-2 bg-white/40 mx-3 mb-3 rounded-lg border border-gray-100 shadow-inner text-xs">
-                <!-- Mensagens de chat injetadas aqui -->
-            </div>
+            <div id="chat-window" class="flex-grow overflow-y-auto p-4 space-y-3 bg-gray-50/50 m-4 rounded-xl border border-gray-100 shadow-inner text-sm">
+                </div>
         </div>
 
-        <!-- ============================================= -->
-        <!-- COLUNA CENTRAL (Mesa de Trabalho)             -->
-        <!-- ============================================= -->
         <div id="col-center" class="game-column p-6 relative">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200/50 pb-3">Mesa de Trabalho</h2>
             
@@ -447,7 +467,6 @@
                 </div>
             </div>
             
-            <!-- Cronômetro Progressivo -->
             <div id="timer-bar-container">
                 <div id="timer-bar"></div>
             </div>
@@ -455,53 +474,45 @@
             <div id="feedback-message" class="h-12 flex items-center justify-center font-bold text-sm transition-all"></div>
         </div>
 
-        <!-- ============================================= -->
-        <!-- COLUNA DIREITA (Ferramentas & Ação)           -->
-        <!-- ============================================= -->
         <div id="col-right" class="game-column">
-            <div id="knowledge-base" class="flex-1 flex flex-col p-4" style="min-height: 0;">
-                <h3 class="text-lg font-bold text-gray-800 mb-3 text-center uppercase tracking-wide border-b border-gray-200/50 pb-2">Manual de Regras</h3>
+            <div id="knowledge-base" class="flex-1 flex flex-col p-5" style="min-height: 0;">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 text-center uppercase tracking-wide">Manual de Regras</h3>
                 
-                <nav class="flex space-x-1 p-1 bg-gray-100/80 rounded-lg mb-2">
+                <nav class="flex space-x-1 p-1.5 bg-gray-100/80 rounded-xl mb-4">
                     <button data-tab="regras" class="tab-button flex-1 py-1.5 px-1 text-xs active">Regras</button>
                     <button data-tab="ativos" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Ativos</button>
                     <button data-tab="pessoal" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Pessoal</button>
                     <button data-tab="glossario" class="tab-button flex-1 py-1.5 px-1 text-xs text-gray-500">Glossário</button>
                 </nav>
 
-                <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar" style="min-height: 0;">
-                    <div id="tab-content-regras" class="tab-content space-y-3 p-1">
-                        <!-- Regras injetadas pelo JS -->
-                    </div>
-                    <div id="tab-content-ativos" class="tab-content hidden space-y-3 p-1">
-                        <div class="mb-2">
-                            <div class="font-bold text-red-600 text-sm mb-1">Servidores Críticos (Risco Alto)</div>
-                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
-                                <li>SRV-DB-01 (Banco de Pacientes)</li>
-                                <li>SRV-IMG-01 (Imagens Médicas)</li>
-                                <li>SRV-APP-CIR (Software Cirúrgico)</li>
+                <div class="flex-1 overflow-y-auto pr-2" style="min-height: 0;">
+                    <div id="tab-content-regras" class="tab-content space-y-3"></div>
+                    <div id="tab-content-ativos" class="tab-content hidden space-y-3">
+                        <div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                            <div class="font-bold text-red-700 text-xs uppercase mb-1">Críticos (Risco Alto)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-700 pl-1">
+                                <li>SRV-DB-01 (Banco)</li>
+                                <li>SRV-IMG-01 (Imagens)</li>
+                                <li>SRV-APP-CIR (Cirúrgico)</li>
                             </ul>
                         </div>
-                        <div class="mb-2">
-                            <div class="font-bold text-orange-600 text-sm mb-1">Estações de Trabalho (Risco Médio)</div>
-                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
+                        <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-100">
+                            <div class="font-bold text-yellow-700 text-xs uppercase mb-1">Workstations (Médio)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-700 pl-1">
                                 <li>UTI-DESK-01 a 10</li>
-                                <li>RAD-DESK-01 (Radiologia)</li>
-                                <li>DIAG-DESK-01 (Diagnóstico)</li>
+                                <li>RAD-DESK-01</li>
+                                <li>DIAG-DESK-01</li>
                             </ul>
                         </div>
-                        <div>
-                            <div class="font-bold text-green-600 text-sm mb-1">Periféricos (Risco Baixo)</div>
-                            <ul class="list-disc list-inside text-xs text-gray-600 pl-1">
-                                <li>IMP-RECEP-01 (Impressora Recepção)</li>
-                                <li>SCAN-LAB-01 (Scanner Laboratório)</li>
+                        <div class="bg-green-50 p-2 rounded-lg border border-green-100">
+                            <div class="font-bold text-green-700 text-xs uppercase mb-1">Periféricos (Baixo)</div>
+                            <ul class="list-disc list-inside text-xs text-gray-700 pl-1">
+                                <li>IMP-RECEP-01</li>
+                                <li>SCAN-LAB-01</li>
                             </ul>
                         </div>
                     </div>
-                    
-                    <!-- ABA PESSOAL MELHORADA -->
                     <div id="tab-content-pessoal" class="tab-content hidden space-y-3 p-1">
-                        <!-- Card CAB -->
                         <div class="bg-indigo-50/80 rounded-lg p-3 border border-indigo-100 shadow-sm">
                             <div class="flex items-center justify-between mb-1">
                                 <div class="font-bold text-indigo-800 text-sm">CAB</div>
@@ -514,7 +525,6 @@
                             </ul>
                         </div>
 
-                        <!-- Card L1 -->
                         <div class="bg-blue-50/80 rounded-lg p-3 border border-blue-100 shadow-sm">
                             <div class="flex items-center justify-between mb-1">
                                 <div class="font-bold text-blue-800 text-sm">Gerentes L1</div>
@@ -527,9 +537,8 @@
                             </ul>
                         </div>
 
-                        <!-- Card Staff Details -->
                         <div class="bg-gray-50/80 rounded-lg p-3 border border-gray-200 shadow-sm">
-                            <div class="font-bold text-gray-700 text-sm mb-2 border-b border-gray-200 pb-1">Staff (Verificação)</div>
+                            <div class="font-bold text-gray-700 text-sm mb-2 border-b border-gray-200 pb-1">Equipe geral</div>
                             <ul class="text-xs text-gray-600 space-y-1.5">
                                 <li><span class="font-semibold text-gray-800">Dr. House:</span> Diagnóstico</li>
                                 <li><span class="font-semibold text-gray-800">G. Fring:</span> Administração</li>
@@ -539,85 +548,74 @@
                             </ul>
                         </div>
                     </div>
-                    <!-- FIM ABA PESSOAL -->
-
-                    <div id="tab-content-glossario" class="tab-content hidden space-y-3 p-1">
-                        <div class="text-xs text-gray-400 text-center italic mt-4">Termos serão adicionados aqui conforme você os descobre.</div>
+                    <div id="tab-content-glossario" class="tab-content hidden space-y-3">
+                        <div class="text-sm text-gray-500 text-center py-4 italic">Termos serão adicionados aqui conforme você os descobre.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botões de Ação: Texto limpo -->
-            <div id="action-buttons" class="grid grid-cols-2 gap-4 p-5 border-t border-gray-200/50 bg-gray-50/50">
-                <button id="reject-btn" class="action-button w-full py-4 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white font-black text-lg rounded-xl shadow-lg border-b-4 border-red-800 active:border-b-0 active:mt-1 uppercase tracking-wider flex items-center justify-center">
-                    Rejeitar
+            <div id="action-buttons" class="grid grid-cols-2 gap-4 p-5 border-t border-gray-200 bg-white/50">
+                <button id="reject-btn" class="action-button w-full py-4 bg-rose-500 text-white font-black text-lg rounded-xl shadow-lg flex flex-col items-center justify-center leading-tight">
+                    <span>REJEITAR</span>
                 </button>
-                <button id="approve-btn" class="action-button w-full py-4 bg-gradient-to-b from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-black text-lg rounded-xl shadow-lg border-b-4 border-green-800 active:border-b-0 active:mt-1 uppercase tracking-wider flex items-center justify-center">
-                    Aprovar
+                <button id="approve-btn" class="action-button w-full py-4 bg-emerald-500 text-white font-black text-lg rounded-xl shadow-lg flex flex-col items-center justify-center leading-tight">
+                    <span>APROVAR</span>
                 </button>
             </div>
         </div>
-
     </div>
 
-    <!-- TELA DE RELATÓRIO DE FIM DE DIA -->
-    <div id="eod-report" class="report-screen hidden fixed inset-0 z-50 flex items-center justify-center">
-        <div id="eod-content" class="report-content p-10 rounded-2xl w-full max-w-lg text-center">
-            <h2 id="eod-day-title" class="text-4xl font-black mb-6 text-gray-800 tracking-tight">Relatório do Dia X</h2>
-            <div class="space-y-4 text-lg bg-gray-50 p-6 rounded-xl border border-gray-100">
-                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                    <span class="text-gray-600">Tickets Processados</span>
-                    <span id="eod-tickets" class="font-bold text-blue-600 text-2xl">0</span>
+    <div id="eod-report" class="report-screen hidden fixed inset-0 bg-gray-900/60 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div id="eod-content" class="report-content bg-white p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center transition-transform duration-300 border border-gray-100">
+            <h2 id="eod-day-title" class="text-3xl font-black mb-6 text-gray-800">Relatório do Dia X</h2>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-blue-50 p-4 rounded-2xl">
+                    <div class="text-sm text-blue-600 font-bold uppercase">Tickets</div>
+                    <div id="eod-tickets" class="text-4xl font-black text-blue-700">0</div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Erros Cometidos</span>
-                    <span id="eod-errors" class="font-bold text-red-600 text-2xl">0</span>
+                <div class="bg-red-50 p-4 rounded-2xl">
+                    <div class="text-sm text-red-600 font-bold uppercase">Erros</div>
+                    <div id="eod-errors" class="text-4xl font-black text-red-700">0</div>
                 </div>
             </div>
-            <blockquote id="eod-comment" class="mt-8 p-6 bg-blue-50 border-l-4 border-blue-500 text-left italic text-blue-800 rounded-r-lg shadow-sm">
-                "Comentário do Supervisor..."
-            </blockquote>
-            <button id="eod-next-day-btn" class="action-button mt-10 w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xl rounded-xl shadow-xl border-b-4 border-indigo-900 active:border-b-0 active:mt-1">
-                Começar o Próximo Dia
-            </button>
+            <blockquote id="eod-comment" class="mb-8 p-6 bg-gray-50 border-l-4 border-blue-500 text-left italic text-gray-600 rounded-r-lg">"Comentário..."</blockquote>
+            <button id="eod-next-day-btn" class="action-button w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all">Começar o Próximo Dia</button>
         </div>
     </div>
     
-    <!-- TELA DE FIM DE JOGO -->
-    <div id="end-game-report" class="report-screen hidden fixed inset-0 z-50 flex items-center justify-center">
-        <div id="end-game-content" class="report-content p-10 rounded-2xl w-full max-w-xl text-center">
-            <h2 id="end-game-title" class="text-4xl font-black mb-6 tracking-tight">Fim de Jogo</h2>
-            <div class="space-y-4 text-xl bg-gray-50 p-6 rounded-xl border border-gray-100 mb-6">
-                <p>Total de Erros na Semana: <span id="end-game-total-errors" class="font-bold text-red-600 text-3xl ml-2">0</span></p>
+    <div id="end-game-report" class="report-screen hidden fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50 backdrop-blur-md">
+        <div id="end-game-content" class="report-content bg-white p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center transition-transform duration-300 border border-gray-200">
+            <h2 id="end-game-title" class="text-3xl font-black mb-6">Fim de Jogo</h2>
+            <div class="space-y-3 text-lg mb-8">
+                <p class="text-gray-600">Total de Erros na Semana</p>
+                <span id="end-game-total-errors" class="text-6xl font-black text-gray-800">0</span>
             </div>
-            <blockquote id="end-game-comment" class="p-6 bg-gray-100 border-l-4 text-left italic text-gray-700 rounded-r-lg shadow-sm text-lg">
-                "Comentário Final do Supervisor..."
-            </blockquote>
-            <button id="end-game-restart-btn" class="action-button mt-10 w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xl rounded-xl shadow-xl border-b-4 border-blue-900 active:border-b-0 active:mt-1">
-                Jogar Novamente
-            </button>
+            <blockquote id="end-game-comment" class="mb-8 p-6 bg-gray-50 border-l-4 text-left italic text-gray-600 rounded-r-lg">"Comentário Final..."</blockquote>
+            <button id="end-game-restart-btn" class="action-button w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg transition-all">Jogar Novamente</button>
         </div>
     </div>
 
-    <!-- ============================================= -->
-    <!-- JAVASCRIPT - LÓGICA DO JOGO (100% Original)   -->
-    <!-- ============================================= -->
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- 1. Elementos do DOM ---
             const gameContainer = document.getElementById('game-container');
+            const startScreen = document.getElementById('start-screen');
+            const startGameBtn = document.getElementById('start-game-btn');
+            
             const colLeft = document.getElementById('col-left');
             const colCenter = document.getElementById('col-center');
             const colRight = document.getElementById('col-right');
             const gameDayEl = document.getElementById('game-day');
-            const gameTimeEl = document.getElementById('game-time'); // Relógio
+            const gameTimeEl = document.getElementById('game-time');
             const queueCountEl = document.getElementById('queue-count');
             const ticketQueueEl = document.getElementById('ticket-queue');
             const queueTitleEl = document.getElementById('queue-title');
             const chatWindowEl = document.getElementById('chat-window');
             const chatTitleEl = document.getElementById('chat-title');
             const currentTicketEl = document.getElementById('current-ticket');
+            const workbenchEl = document.getElementById('current-ticket'); // Usando card do ticket como alvo do brilho
             const watermarkEl = document.getElementById('watermark');
             const watermarkTextEl = document.getElementById('watermark-text');
             const feedbackMessageEl = document.getElementById('feedback-message');
@@ -629,14 +627,14 @@
             const rulesContentEl = document.getElementById('tab-content-regras');
             const rulesTabButton = document.querySelector('.tab-button[data-tab="regras"]');
             const glossaryContentEl = document.getElementById('tab-content-glossario');
-            // Telas de Relatório
+            
             const eodReportEl = document.getElementById('eod-report');
             const eodContentEl = document.getElementById('eod-content');
             const eodNextDayBtn = document.getElementById('eod-next-day-btn');
             const endGameReportEl = document.getElementById('end-game-report');
             const endGameContentEl = document.getElementById('end-game-content');
             const endGameRestartBtn = document.getElementById('end-game-restart-btn');
-            // Cronômetro
+            
             const timerBarContainer = document.getElementById('timer-bar-container');
             const timerBar = document.getElementById('timer-bar');
 
@@ -646,19 +644,34 @@
 
             function initAudio() {
                 if (audioInitialized) return;
+                Tone.start();
+                
                 sounds.ping = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, release: 0.1 } }).toDestination();
                 sounds.stamp = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 6, envelope: { attack: 0.001, decay: 0.2, sustain: 0 } }).toDestination();
                 sounds.reject = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 } }).toDestination();
+                sounds.static = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.15, sustain: 0 } }).toDestination(); // Som de glitch
                 sounds.typing = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).toDestination();
                 sounds.chat = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+                
+                Tone.Destination.volume.value = -10;
                 
                 audioInitialized = true;
                 console.log("Audio Context Initialized.");
             }
-            document.body.addEventListener('click', initAudio, { once: true });
+
+            // --- Lógica de Inicialização do Jogo ---
+            startGameBtn.addEventListener('click', () => {
+                initAudio();
+                startScreen.classList.add('hidden-screen');
+                gameContainer.classList.remove('background-blur');
+
+                setTimeout(() => {
+                    startScreen.style.display = 'none';
+                    initGameLogic();
+                }, 500);
+            });
 
             // --- 3. Dicionários e Dados do Jogo ---
-
             const GLOSSARY = {
                 'RI': "Registro de Incidente.",
                 'RFC': "Requisição de Mudança (Request for Change).",
@@ -687,29 +700,19 @@
             const ASSETS = {
                 alto: ['SRV-DB-01', 'SRV-IMG-01', 'SRV-APP-CIR'],
                 medio: ['UTI-DESK-05', 'RAD-DESK-01', 'DIAG-DESK-01'],
-                bajo: ['IMP-RECEP-01', 'SCAN-LAB-01']
+                baixo: ['IMP-RECEP-01', 'SCAN-LAB-01']
             };
             
-            // Mensagens de Pressão (Tom e Velocidade)
             const PRESSURE_MESSAGES = {
-                'RI-1004': "Por que estão demorando tanto? Preciso disso agora.", // Dr. House
-                'RI-1006': "Olha, aprova esse chamado pra mim. Quem sabe, em troca, eu consigo preparar algo que só alguém da minha área saberia fazer.", // Walter White
-                'RI-1008': "Esse equipamento de radiologia não está ligando. Estou perdendo dinheiro a cada segundo. Quer que eu vá até aí para você aprovar isso?", // Gustavo Fring
-                'RFC-2003': "Esta nova IA é um avanço fascinante. Não deixe que a falta de informações atrase o progresso.", // Dr. Hannibal Lecter
-                'RFC-2016': "Preciso desse visualizador 3D com urgência. Aprove essa droga ou encontre outro emprego.", // Dr. Gregory House
-                'RFC-2017': "Meu caro, o bisturi não tolera hesitações. Tenho só dez minutos até a cirurgia. Aprove logo." // Dr. Hannibal Lecter
+                'RI-1004': "Por que estão demorando tanto? Preciso disso agora.",
+                'RI-1006': "Resolve esse chamado aí pra mim que eu te mando uma tina depois...",
+                'RI-1008': "Esse equipamento de radiologia não está ligando. Estou perdendo dinheiro a cada segundo. Quer que eu vá até aí para você aprovar isso?",
+                'RFC-2003': "Esta nova IA é um avanço fascinante. Não deixe que a falta de informações atrase o progresso.",
+                'RFC-2016': "Preciso desse resolva isso com urgência. Aprove essa droga ou encontre outro emprego.",
+                'RFC-2017': "Meu caro, o bisturi não tolera hesitações. Tenho só dez minutos até a cirurgia. Aprove logo."
             };
 
-            // Cronômetro Progressivo
-            const DAY_TIMERS = {
-                1: -1,  // Tutorial
-                2: 120, // 2:00
-                3: 120, // 2:00
-                4: 90,  // 1:30
-                5: 90,  // 1:30
-                6: 60,  // 1:00
-                7: 60   // 1:00
-            };
+            const DAY_TIMERS = { 1: -1, 2: 120, 3: 120, 4: 90, 5: 90, 6: 60, 7: 60 };
 
             const DAY_RULES = {
                 1: [
@@ -721,9 +724,7 @@
                     "Introdução de <span class='tooltip' data-term='RFC'>RFC</span>s. RFCs de Risco Baixo são permitidas.",
                     "Verificar consistência de dados do Pessoal (Aba 'Pessoal')."
                 ],
-                3: [
-                    "Toda <span class='tooltip' data-term='RFC'>RFC</span> com <span class='tooltip' data-term='Risco'>Risco</span> 'Médio' ou 'Alto' DEVE ter um <span class='tooltip' data-term='Plano de Rollback'>Plano de Rollback</span> detalhado."
-                ],
+                3: ["Toda <span class='tooltip' data-term='RFC'>RFC</span> com <span class='tooltip' data-term='Risco'>Risco</span> 'Médio' ou 'Alto' DEVE ter um <span class='tooltip' data-term='Plano de Rollback'>Plano de Rollback</span> detalhado."],
                 4: [
                     "RFCs que afetam <span class='tooltip' data-term='Ativo Crítico'>Ativos Críticos</span> (ver aba 'Ativos') são automaticamente consideradas de Risco 'Alto'.",
                     "O Risco do ticket deve ser compatível com o Risco do Ativo (ex: Risco 'Baixo' para Ativo 'Baixo')."
@@ -737,46 +738,47 @@
                 7: ["AUDITORIA FINAL: Todas as regras (Dias 1-6) estão ativas. Verifique tudo!"]
             };
 
-            // Mais Tickets (Dias 2-5)
             const TICKET_DATA = {
                 1: [
                     { id: 'RI-1001', type: 'Incidente', solicitante: 'Dr. Victor Fries', depto: 'Oncologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Monitor cardíaco da UTI-DESK-05 não está respondendo.', errors: [] },
                     { id: 'RI-1002', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Média', impacto: null, descricao: 'Sistema de imagens (RAD-DESK-01) lento.', errors: ['MISSING_IMPACTO'] },
                     { id: 'RI-1003', type: 'Incidente', solicitante: 'Recepção', depto: 'Geral', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Impressora de pulseiras travando.', errors: [] }
                 ],
-                2: [ // 4 tickets
+                2: [ 
                     { id: 'RI-1004', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Cardiologia', urgencia: 'Alta', impacto: 'Alto', descricao: 'Software de ecocardiograma falhando.', errors: ['DEPT_MISMATCH'] },
+                    { id: 'RI-COPA', type: 'Incidente', solicitante: 'Copa', depto: 'Geral', urgencia: 'Alta', impacto: 'Alto', descricao: 'A máquina de café travou na opção descafeinado. Prioridade: CRÍTICA.', errors: [] }, /* Ticket Narrativo */
                     { id: 'RFC-2001', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar patch de segurança em desktops da administração.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: [] },
                     { id: 'RI-1005', type: 'Incidente', solicitante: null, depto: 'Laboratório Químico', urgencia: 'Média', impacto: 'Média', descricao: 'Centrífuga não envia dados.', errors: ['MISSING_SOLICITANTE'] },
-                    { id: 'RI-1006', type: 'Incidente', solicitante: 'Walter White', depto: 'Laboratório Químico', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Scanner (SCAN-LAB-01) com bug de driver.', errors: [] } // Ticket correto
+                    { id: 'RI-1006', type: 'Incidente', solicitante: 'Walter White', depto: 'Laboratório Químico', urgencia: 'Baixa', impacto: 'Baixa', descricao: 'Scanner (SCAN-LAB-01) com bug de driver.', errors: [] }
                 ],
-                3: [ // 4 tickets
+                3: [
                     { id: 'RFC-2002', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Update de firmware no switch da ala Leste.', rollback: 'Reiniciar o switch para config anterior.', assinatura: 'Linus Torvalds', errors: [] },
                     { id: 'RFC-2003', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Implementar novo módulo de IA no SRV-APP-CIR.', rollback: null, assinatura: 'Miranda Priestly', errors: ['MISSING_ROLLBACK'] },
                     { id: 'RI-1007', type: 'Incidente', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', urgencia: 'Alta', impacto: 'Alta', descricao: 'Estação de diagnóstico (DIAG-DESK-01) sem acesso ao SRV-IMG-01.', errors: [] },
-                    { id: 'RFC-2004', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Patch de segurança em estação da UTI.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] } // Erro
+                    { id: 'RFC-2004', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Patch de segurança em estação da UTI.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] }
                 ],
-                4: [ // 4 tickets
+                4: [
                     { id: 'RFC-2005', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-DB-01', descricao: 'Otimizar queries no SRV-DB-01.', rollback: 'Reverter script de DB.', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] }, 
                     { id: 'RFC-2006', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Alto', ativo: 'IMP-RECEP-01', descricao: 'Trocar toner da impressora da recepção.', rollback: 'N/A', assinatura: 'Gary McKinnon', errors: ['RISK_LOGIC_VIOLATION', 'INVALID_SIGNATURE'] },
                     { id: 'RFC-2007', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Migração do SRV-DB-01 para novo hardware.', rollback: 'Manter servidor antigo online como hot-swap.', assinatura: 'Linus Torvalds', errors: [] },
-                    { id: 'RFC-2008', type: 'Mudança', solicitante: 'Walter White', depto: 'Laboratório Químico', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Update de software do scanner.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] } // Erro
+                    { id: 'RFC-2008', type: 'Mudança', solicitante: 'Walter White', depto: 'Laboratório Químico', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Update de software do scanner.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] }
                 ],
-                5: [ // 4 tickets
+                5: [
                     { id: 'RFC-2009', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Instalar software experimental no DIAG-DESK-01.', rollback: 'Desinstalar software.', assinatura: 'Dr. Gregory House', errors: ['INVALID_SIGNATURE'] },
-                    { id: 'RFC-2010', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Médio', ativo: 'DIAG-DESK-01', descricao: 'Implementar novo visualizador 3D.', rollback: 'Plano de rollback em anexo.', assinatura: 'Gustavo Fring', errors: ['INVALID_SIGNATURE', 'DEPT_MISMATCH'] }, // Erro duplo
+                    { id: 'RFC-2010', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Médio', ativo: 'DIAG-DESK-01', descricao: 'Implementar novo visualizador 3D.', rollback: 'Plano de rollback em anexo.', assinatura: 'Gustavo Fring', errors: ['INVALID_SIGNATURE', 'DEPT_MISMATCH'] },
                     { id: 'RFC-2011', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SCAN-LAB-01', descricao: 'Adicionar novo grupo de impressoras.', rollback: 'N/A', assinatura: 'Miranda Priestly', errors: ['INVALID_SIGNATURE_L1'] },
                     { id: 'RFC-2012', type: 'Mudança', solicitante: 'Linus Torvalds', depto: 'TI', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Patch urgente no SRV-APP-CIR.', rollback: 'Snapshot da VM antes do patch.', assinatura: 'Linus Torvalds', errors: [] }
                 ],
-                6: [ // 6 tickets
+                6: [
                     { id: 'RI-1008', type: 'Incidente', solicitante: 'Gustavo Fring', depto: 'Administração', urgencia: 'Alta', impacto: 'Alta', descricao: 'RAD-DESK-01 não liga. Cirurgias marcadas.', errors: [] },
+                    { id: 'RFC-NETFLIX', type: 'Mudança', solicitante: 'Paciente Anônimo', depto: 'Geral', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Liberar porta no firewall para assistir Netflix 4K na sala de espera.', rollback: 'Sem paciência para rollback.', assinatura: 'Kevin Mitnick', errors: ['INVALID_SIGNATURE', 'RISK_LOGIC_VIOLATION'] }, /* Ticket Narrativo */
                     { id: 'RFC-2013', type: 'Mudança', solicitante: 'Gary McKinnon', depto: 'TI', risco: 'Baixo', ativo: 'IMP-RECEP-01', descricao: 'Atualizar driver da impressora da recepção.', rollback: 'Reverter driver.', assinatura: 'Gary McKinnon', errors: [] },
                     { id: 'RFC-2014', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Médio', ativo: 'UTI-DESK-05', descricao: 'Instalar novo software de monitoramento na UTI.', rollback: 'Desinstalar software.', assinatura: 'Gary McKinnon', errors: ['INVALID_SIGNATURE'] },
                     { id: 'RFC-2015', type: 'Mudança', solicitante: 'Kevin Mitnick', depto: 'TI', risco: 'Baixo', ativo: 'SRV-APP-CIR', descricao: 'Corrigir typo na UI do software cirúrgico.', rollback: 'N/A', assinatura: 'Kevin Mitnick', errors: ['ASSET_RISCO_ALTO'] },
                     { id: 'RFC-2016', type: 'Mudança', solicitante: 'Dr. Gregory House', depto: 'Diagnóstico', risco: 'Alto', ativo: 'SRV-IMG-01', descricao: 'Implementar novo visualizador 3D.', rollback: null, assinatura: 'Linus Torvalds', errors: ['MISSING_ROLLBACK'] },
                     { id: 'RFC-2017', type: 'Mudança', solicitante: 'Dr. Hannibal Lecter', depto: 'P&D Cirúrgico', risco: 'Alto', ativo: 'SRV-APP-CIR', descricao: 'Ajuste de emergência no software de neuronavegação.', rollback: null, assinatura: null, errors: ['MISSING_ROLLBACK', 'MISSING_SIGNATURE'] }
                 ],
-                7: [ // 7 tickets
+                7: [
                     { id: 'RI-1009', type: 'Incidente', solicitante: 'Auditor', depto: 'Qualidade', urgencia: null, impacto: 'Baixo', descricao: 'Teste de sistema.', errors: ['MISSING_URGENCIA'] },
                     { id: 'RFC-2018', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Médio', ativo: 'RAD-DESK-01', descricao: 'Teste de RFC Risco Médio.', rollback: 'Plano OK.', assinatura: 'Kevin Mitnick', errors: ['INVALID_SIGNATURE'] },
                     { id: 'RFC-2019', type: 'Mudança', solicitante: 'Auditor', depto: 'Qualidade', risco: 'Alto', ativo: 'SRV-DB-01', descricao: 'Teste de RFC em Ativo Crítico.', rollback: 'Plano de teste OK.', assinatura: 'Auditor Externo', errors: ['INVALID_SIGNATURE'] },
@@ -787,7 +789,6 @@
                 ]
             };
 
-
             // --- 4. Estado do Jogo ---
             let gameState = {
                 currentDay: 1,
@@ -797,27 +798,27 @@
                 discoveredTerms: new Set(),
                 inTutorial: false,
                 tutorialStep: 0,
-                ticketsProcessed: 0, // Por dia
-                errorsCommitted: 0,  // Por dia
-                totalErrorsAcrossWeek: 0, // Total
+                ticketsProcessed: 0,
+                errorsCommitted: 0,
+                totalErrorsAcrossWeek: 0,
                 timerId: null,
                 timeLeft: 0,
                 totalTime: 0, 
                 pressureMessageTimerId: null,
-                currentTimeInMinutes: 0, // Para o relógio dinâmico
-                minutesPerTicket: 0      // Para o relógio dinâmico
+                currentTimeInMinutes: 0,
+                minutesPerTicket: 0,
+                streak: 0 // Nova variável para o combo
             };
 
             // --- 5. Funções Principais do Jogo ---
-
-            function initGame() {
-                console.log("Iniciando o jogo...");
+            
+            function initGameLogic() {
+                console.log("Iniciando lógica do jogo...");
                 setupEventListeners();
                 loadDay(1);
             }
 
             function loadDay(dayNumber) {
-                // Tela de Fim de Jogo
                 if (dayNumber > 7) {
                     showEndGameReport();
                     return;
@@ -826,8 +827,7 @@
                 gameState.currentDay = dayNumber;
                 gameDayEl.textContent = `Dia ${dayNumber}`;
                 
-                // Lógica do Relógio
-                gameState.currentTimeInMinutes = 0; // Reseta para 08:00 AM
+                gameState.currentTimeInMinutes = 0;
                 updateClockDisplay();
                 
                 document.querySelectorAll('.new-rule-indicator').forEach(el => el.remove());
@@ -844,7 +844,6 @@
 
                 gameState.ticketsInQueue = [...(TICKET_DATA[dayNumber] || [])];
                 
-                // Lógica do Relógio (Cálculo)
                 const totalTickets = gameState.ticketsInQueue.length;
                 const totalWorkMinutes = 8 * 60; // 480
                 if (totalTickets > 0) {
@@ -858,7 +857,7 @@
                 
                 let chatMsg = "";
                 switch(dayNumber) {
-                    case 1: break; // O tutorial cuida disso
+                    case 1: break;
                     case 2: chatMsg = "Bom dia. Novos tipos de erro hoje. Verifique os solicitantes e seus departamentos."; break;
                     case 3: chatMsg = "Hoje introduzimos RFCs de Risco Médio/Alto. Se não tiver um Plano de Rollback, é rejeição automática. Simples."; break;
                     case 4: chatMsg = "Alguns ativos são mais importantes que outros. Um 'Risco Baixo' em um 'Ativo Crítico' não é Risco Baixo. Fique de olho nisso."; break;
@@ -893,16 +892,15 @@
                 const finalTitle = document.getElementById('end-game-title');
                 const finalComment = document.getElementById('end-game-comment');
                 
-                // Limpa classes de cor anteriores
                 finalTitle.classList.remove('text-green-600', 'text-red-600');
                 finalComment.classList.remove('border-green-500', 'border-red-500');
 
-                if (gameState.totalErrorsAcrossWeek <= 5) { // Final "Bom"
+                if (gameState.totalErrorsAcrossWeek <= 5) {
                     finalTitle.textContent = "Avaliação Concluída: Promovido";
                     finalTitle.classList.add('text-green-600');
                     finalComment.textContent = `"Sua precisão foi excepcional. A IA foi treinada com sucesso e seus erros foram mínimos. Você está promovido a Gerente de Implementação da IA."`;
                     finalComment.classList.add('border-green-500');
-                } else { // Final "Ruim"
+                } else {
                     finalTitle.textContent = "Avaliação Concluída: Contrato Encerrado";
                     finalTitle.classList.add('text-red-600');
                     finalComment.textContent = `"Seus resultados foram... insatisfatórios. A IA aprendeu com seus erros, mas o nível de risco que você introduziu é inaceitável. O conselho decidiu 'descontinuar' seu contrato. Obrigado por seus serviços."`;
@@ -921,26 +919,21 @@
                 
                 gameState.ticketsInQueue.forEach((ticket, index) => {
                     const ticketEl = document.createElement('div');
-                    ticketEl.className = 'p-4 border-b border-gray-100 last:border-0 cursor-pointer bg-white/60 hover:bg-white/90 transition-colors shadow-sm';
+                    ticketEl.className = 'p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors bg-white shadow-sm';
                     ticketEl.dataset.ticketId = ticket.id;
                     ticketEl.innerHTML = `
-                        <div class="flex justify-between items-center mb-1">
-                            <div class="font-bold text-indigo-900">${ticket.id}</div>
-                            <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800'}">${ticket.type}</span>
+                        <div class="font-bold flex justify-between">
+                            <span>${ticket.id}</span>
+                            <span class="text-[10px] uppercase tracking-wide text-gray-400">${ticket.type}</span>
                         </div>
-                        <div class="text-xs text-gray-500 truncate font-medium">${ticket.solicitante || '[Vazio]'}</div>
+                        <div class="text-xs text-gray-600 truncate mt-1">${ticket.solicitante || '[Vazio]'}</div>
                     `;
                     
                     if (index === 0 && gameState.currentDay > 1 && !gameState.processing && !gameState.inTutorial) {
                         ticketEl.classList.add('new-ticket-pulse');
-                        if (sounds.ping) {
-                            sounds.ping.triggerAttackRelease("C5", "16n", Tone.now());
-                        }
-                        setTimeout(() => {
-                            if(ticketEl) ticketEl.classList.remove('new-ticket-pulse');
-                        }, 1800);
+                        if (sounds.ping) sounds.ping.triggerAttackRelease("C5", "16n", Tone.now());
+                        setTimeout(() => { if(ticketEl) ticketEl.classList.remove('new-ticket-pulse'); }, 1800);
                     }
-                    
                     ticketQueueEl.appendChild(ticketEl);
                 });
             }
@@ -949,13 +942,12 @@
                 const rules = DAY_RULES[gameState.currentDay] || [];
                 let rulesHtml = '';
                 if(gameState.currentDay === 7) {
-                    rulesHtml = "<h3>Todas as Regras Ativas (Dias 1-6):</h3>" +
-                                Object.values(DAY_RULES).flat().map(rule => `<li class="text-xs text-gray-700 border-l-2 border-indigo-300 pl-2 py-1">${rule}</li>`).join('');
+                    rulesHtml = "<h3 class='font-bold text-gray-800 mb-2'>Todas as Regras Ativas:</h3>" +
+                                Object.values(DAY_RULES).flat().map(rule => `<li class="text-xs text-gray-700 leading-relaxed">${rule}</li>`).join('');
                 } else {
-                    rulesHtml = rules.map(rule => `<li class="text-xs text-gray-700 font-medium border-l-2 border-blue-300 pl-2 py-1 leading-relaxed">${rule}</li>`).join('');
+                    rulesHtml = rules.map(rule => `<li class="text-xs text-gray-700 font-medium leading-relaxed">${rule}</li>`).join('');
                 }
-
-                rulesContentEl.innerHTML = `<ul class="space-y-3">${rulesHtml}</ul>`;
+                rulesContentEl.innerHTML = `<ul class="list-disc list-inside space-y-2">${rulesHtml}</ul>`;
                 setupGlossaryTooltips(rulesContentEl);
             }
 
@@ -963,43 +955,34 @@
             function typeChatMessage(sender, message, type = 'npc', onComplete) {
                 if (typingIndicatorEl) chatWindowEl.removeChild(typingIndicatorEl);
                 typingIndicatorEl = document.createElement('div');
-                typingIndicatorEl.className = 'typing-cursor mb-2';
-                typingIndicatorEl.textContent = `${sender} está digitando...`;
+                typingIndicatorEl.className = 'typing-cursor p-2';
+                typingIndicatorEl.textContent = `${sender} está digitando`;
                 chatWindowEl.appendChild(typingIndicatorEl);
                 chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
 
                 if (!colLeft.classList.contains('column-blurred')) {
                     chatTitleEl.classList.add('chat-unread-pulse');
-                    chatWindowEl.addEventListener('mouseenter', () => {
-                        chatTitleEl.classList.remove('chat-unread-pulse');
-                    }, { once: true });
+                    chatWindowEl.addEventListener('mouseenter', () => chatTitleEl.classList.remove('chat-unread-pulse'), { once: true });
                 }
 
-                const typingTime = gameState.inTutorial ? message.length * 50 + 300 : message.length * 20 + 300;
+                const typingTime = gameState.inTutorial ? message.length * 60 + 500 : message.length * 30 + 500;
                 
                 setTimeout(() => {
                     if (typingIndicatorEl) {
                         try { chatWindowEl.removeChild(typingIndicatorEl); } catch (e) {}
                         typingIndicatorEl = null;
                     }
-                    
                     displayChatMessage(sender, message, type);
-                    
                     if (onComplete) onComplete();
                 }, typingTime);
             }
             
             function displayChatMessage(sender, message, type = 'npc') {
                 const msgEl = document.createElement('div');
-                msgEl.className = "text-sm p-2 rounded bg-white/50 border border-gray-100 shadow-sm";
+                let senderClass = 'font-bold text-red-600';
+                if (type === 'system') senderClass = 'font-bold text-blue-600';
                 
-                let senderHtml = `<span class="font-bold text-red-600 text-[10px] uppercase block mb-0.5">${sender}</span>`; // NPC
-                if (type === 'system') {
-                    senderHtml = `<span class="font-bold text-blue-600 text-[10px] uppercase block mb-0.5">Supervisor</span>`; // Supervisor
-                    msgEl.classList.add('bg-blue-50/50');
-                }
-                
-                msgEl.innerHTML = `${senderHtml} <span class="text-gray-800 leading-snug text-xs">${message}</span>`;
+                msgEl.innerHTML = `<span class="${senderClass} block text-xs mb-0.5">${sender}</span> <span class="text-gray-800 bg-white inline-block p-2 rounded-lg rounded-tl-none shadow-sm border border-gray-100">${message}</span>`;
                 chatWindowEl.appendChild(msgEl);
                 chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
                 
@@ -1012,7 +995,7 @@
             function displayChatDivider(dayNumber) {
                 const divEl = document.createElement('div');
                 divEl.className = 'chat-divider';
-                divEl.textContent = `Dia ${dayNumber}`;
+                divEl.textContent = `Início do Dia ${dayNumber}`;
                 chatWindowEl.appendChild(divEl);
                 chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
             }
@@ -1039,15 +1022,13 @@
                 if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
                 
                 const timeForDay = DAY_TIMERS[gameState.currentDay];
-                if (timeForDay > 0) {
-                    startTimer(timeForDay);
-                }
+                if (timeForDay > 0) startTimer(timeForDay);
                 
                 const pressureMsg = PRESSURE_MESSAGES[ticket.id];
                 if (pressureMsg && !gameState.inTutorial) {
                     gameState.pressureMessageTimerId = setTimeout(() => {
                         addChatMessage(ticket.solicitante, pressureMsg, 'npc');
-                    }, 5000); // 5 segundos
+                    }, 5000);
                 }
             }
 
@@ -1062,8 +1043,8 @@
                     
                     return `
                         <div class="${fieldClass}" ${dataAttr}>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">${label}</label>
-                            <div class="text-base text-gray-900 font-medium ${emptyClass}">${valDisplay}</div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">${label}</label>
+                            <div class="text-base text-gray-800 font-medium ${emptyClass}">${valDisplay}</div>
                         </div>
                     `;
                 };
@@ -1071,9 +1052,9 @@
                 currentTicketEl.classList.remove('slide-out');
                 
                 currentTicketEl.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-4">
-                        <h3 class="text-3xl font-black text-indigo-900 tracking-tight">${ticket.id}</h3>
-                        <span class="px-3 py-1 rounded-full text-sm font-bold shadow-sm ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-purple-100 text-purple-700 border border-purple-200'}">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6">
+                        <h3 class="text-3xl font-black text-gray-800 tracking-tight">${ticket.id}</h3>
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide ${ticket.type === 'Incidente' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'}">
                             ${ticket.type}
                         </span>
                     </div>
@@ -1099,7 +1080,7 @@
                     
                     ${ticket.type === 'Mudança' ?
                         `
-                        <div class="border-t border-gray-100 pt-4 mt-2 grid grid-cols-2 gap-x-8">
+                        <div class="border-t border-gray-100 pt-4 mt-2 grid grid-cols-2 gap-x-8 bg-gray-50 p-3 rounded-lg">
                             ${createField('Plano de Rollback', ticket.rollback, 'rollback')}
                             ${createField('Assinatura', ticket.assinatura, 'assinatura')}
                         </div>
@@ -1136,7 +1117,7 @@
                     }
                 }
                 
-                if (ticket.ativo && ASSETS.bajo && ASSETS.bajo.includes(ticket.ativo) && ticket.risco !== 'Baixo') {
+                if (ticket.ativo && ASSETS.baixo.includes(ticket.ativo) && ticket.risco !== 'Baixo') {
                     if (!errors.includes('RISK_LOGIC_VIOLATION')) errors.push('RISK_LOGIC_VIOLATION');
                 }
                 
@@ -1157,11 +1138,8 @@
                         if (!errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
                     }
                     if (ticket.risco === 'Baixo' && !isL1) {
-                          if(isCab && !errors.includes('INVALID_SIGNATURE_L1')) {
-                            errors.push('INVALID_SIGNATURE_L1');
-                          } else if (!isL1 && !errors.includes('INVALID_SIGNATURE')) {
-                            errors.push('INVALID_SIGNATURE');
-                          }
+                         if(isCab && !errors.includes('INVALID_SIGNATURE_L1')) errors.push('INVALID_SIGNATURE_L1');
+                         else if (!isL1 && !errors.includes('INVALID_SIGNATURE')) errors.push('INVALID_SIGNATURE');
                     }
                 }
                 
@@ -1174,8 +1152,19 @@
                 else if (decision === 'reject' && !hasErrors) isCorrect = false;
                 
                 gameState.ticketsProcessed++;
+                
+                // Lógica de Erro e Glitch
                 if (!isCorrect) {
                     gameState.errorsCommitted++;
+                    gameState.streak = 0; // Reset streak
+                    currentTicketEl.classList.remove('streak-glow');
+                    triggerGlitch(); // Gatilho do Glitch
+                } else {
+                    // Lógica de Streak
+                    gameState.streak++;
+                    if (gameState.streak >= 3) {
+                        currentTicketEl.classList.add('streak-glow');
+                    }
                 }
 
                 if (isCorrect) {
@@ -1186,46 +1175,51 @@
                     switch(errorKey) {
                         case 'MISSING_IMPACTO':
                         case 'MISSING_URGENCIA':
-                        case 'MISSING_SOLICITANTE':
-                            errorMsg = "Erro: Informação Faltando! (Campo Vazio)"; break;
-                        case 'MISSING_ROLLBACK':
-                            errorMsg = "Erro: RFC de Risco Alto/Médio precisa de Plano de Rollback!"; break;
-                        case 'DEPT_MISMATCH':
-                            errorMsg = "Erro: Incongruência de dados! O departamento do solicitante está incorreto."; break;
-                        case 'RISK_LOGIC_VIOLATION':
-                            errorMsg = "Erro: Violação de Lógica! Risco 'Alto' para um Ativo de Risco 'Baixo'."; break;
-                        case 'ASSET_RISCO_ALTO':
-                            errorMsg = "Erro: Este Ativo Crítico exige Risco Alto!"; break;
-                        case 'INVALID_SIGNATURE':
-                            errorMsg = "Erro: Assinatura inválida para este Risco!"; break;
-                        case 'INVALID_SIGNATURE_L1':
-                            errorMsg = "Erro: Assinatura de nível incorreto para Risco Baixo."; break;
+                        case 'MISSING_SOLICITANTE': errorMsg = "⚠ ALERTA DE INSTABILIDADE: DADOS INCOMPLETOS ⚠"; break;
+                        case 'MISSING_ROLLBACK': errorMsg = "⚠ ALERTA DE INSTABILIDADE: ROLLBACK AUSENTE ⚠"; break;
+                        case 'DEPT_MISMATCH': errorMsg = "⚠ ALERTA DE INSTABILIDADE: DADOS INCONGRUENTES ⚠"; break;
+                        case 'RISK_LOGIC_VIOLATION': errorMsg = "⚠ ALERTA DE INSTABILIDADE: LÓGICA DE RISCO INVÁLIDA ⚠"; break;
+                        case 'ASSET_RISCO_ALTO': errorMsg = "⚠ ALERTA DE INSTABILIDADE: ATIVO CRÍTICO EXPOSTO ⚠"; break;
+                        case 'INVALID_SIGNATURE': errorMsg = "⚠ ALERTA DE INSTABILIDADE: ASSINATURA INVÁLIDA ⚠"; break;
+                        case 'INVALID_SIGNATURE_L1': errorMsg = "⚠ ALERTA DE INSTABILIDADE: HIERARQUIA DE ASSINATURA INCORRETA ⚠"; break;
                     }
-                    if (decision === 'reject' && !hasErrors) {
-                        errorMsg = "Erro: Este ticket estava correto e foi rejeitado.";
-                    }
+                    if (decision === 'reject' && !hasErrors) errorMsg = "⚠ ALERTA DE INSTABILIDADE: FALSO POSITIVO DETECTADO ⚠";
                     showFeedback(false, decision, errorMsg);
                 }
 
-                setTimeout(() => {
-                    loadNextTicket();
-                }, isCorrect ? 1200 : 2500);
+                setTimeout(() => loadNextTicket(), isCorrect ? 1200 : 2500);
+            }
+            
+            function triggerGlitch() {
+                // Visual
+                gameContainer.classList.add('system-glitch');
+                setTimeout(() => gameContainer.classList.remove('system-glitch'), 200);
+                
+                // Audio
+                if (audioInitialized && sounds.static) {
+                    sounds.static.triggerAttackRelease("16n", Tone.now());
+                }
             }
             
             function showFeedback(isCorrect, decision, message = "") {
                 if (isCorrect) {
-                    if (sounds.stamp) sounds.stamp.triggerAttackRelease("C2", "8n", Tone.now());
+                    // Som de Sucesso com Pitch Shift baseado no Streak
+                    let pitchNote = "C2";
+                    if (gameState.streak >= 3) pitchNote = "G2"; // Streak 3+
+                    if (gameState.streak >= 6) pitchNote = "C3"; // Streak 6+
+                    
+                    if (sounds.stamp) sounds.stamp.triggerAttackRelease(pitchNote, "8n", Tone.now());
+                    
                     watermarkTextEl.textContent = (decision === 'approve') ? 'APROVADO' : 'REJEITADO';
-                    watermarkTextEl.className = `text-9xl font-black opacity-10 ${decision === 'approve' ? 'text-green-600' : 'text-red-600'}`;
+                    watermarkTextEl.className = `text-9xl font-black opacity-10 ${decision === 'approve' ? 'text-green-500 border-green-500' : 'text-red-500 border-red-500'} border-4 p-4 rounded-xl transform rotate-[-12deg]`;
                     watermarkEl.classList.add('show');
                     feedbackMessageEl.textContent = (decision === 'approve') ? 'Aprovado Corretamente.' : 'Rejeitado Corretamente.';
-                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm text-green-600 bg-green-50 rounded-lg border border-green-200 w-full';
+                    feedbackMessageEl.className = 'h-14 p-2 text-center font-bold text-green-600 bg-green-50 w-full rounded-lg border border-green-200';
                 } else {
                     if (sounds.reject) sounds.reject.triggerAttackRelease("2n", Tone.now() + 0.05);
-                    gameContainer.classList.add('screen-shake');
+                    // Não precisa de screen-shake aqui pois o glitch já faz isso visualmente melhor
                     feedbackMessageEl.textContent = message;
-                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm text-red-600 bg-red-50 rounded-lg border border-red-200 w-full';
-                    setTimeout(() => gameContainer.classList.remove('screen-shake'), 300);
+                    feedbackMessageEl.className = 'h-14 p-2 text-center font-bold text-red-600 bg-red-50 w-full rounded-lg border border-red-200';
                 }
             }
 
@@ -1233,7 +1227,6 @@
                 stopTimer();
                 if(gameState.pressureMessageTimerId) clearTimeout(gameState.pressureMessageTimerId);
                 
-                // Avança o relógio
                 gameState.currentTimeInMinutes += gameState.minutesPerTicket;
                 updateClockDisplay();
                 
@@ -1242,7 +1235,7 @@
                 setTimeout(() => {
                     watermarkEl.classList.remove('show');
                     feedbackMessageEl.textContent = '';
-                    feedbackMessageEl.className = 'h-12 flex items-center justify-center font-bold text-sm transition-all';
+                    feedbackMessageEl.className = 'h-14 p-2 text-center font-bold rounded-lg transition-colors duration-300';
                     gameState.processing = false;
                     gameState.currentTicket = null;
                     
@@ -1250,13 +1243,10 @@
                     renderQueue();
                     
                     if (gameState.ticketsInQueue.length === 0) {
-                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8 flex flex-col items-center justify-center h-full"><span>Fim do dia. Processando...</span></div>`;
-                        setTimeout(() => {
-                            showEndOfDayReport();
-                        }, 1500);
+                        currentTicketEl.innerHTML = `<div class="text-center text-gray-500 p-8">Fim do dia. Processando...</div>`;
+                        setTimeout(() => showEndOfDayReport(), 1500);
                     } else {
                         selectTicket(gameState.ticketsInQueue[0].id);
-                        
                         if (gameState.currentDay === 6 && gameState.ticketsInQueue.length === 1) {
                              setTimeout(() => addChatMessage(TICKET_DATA[6][5].solicitante, PRESSURE_MESSAGES['RFC-2017'], 'npc'), 5000);
                         }
@@ -1264,9 +1254,10 @@
                 }, 400);
             }
 
-            // --- Funções de Fim de Dia / Fim de Jogo ---
             function showEndOfDayReport() {
                 stopTimer();
+                // Reset streak visual at end of day
+                currentTicketEl.classList.remove('streak-glow'); 
                 
                 document.getElementById('eod-day-title').textContent = `Relatório do Dia ${gameState.currentDay}`;
                 document.getElementById('eod-tickets').textContent = gameState.ticketsProcessed;
@@ -1279,11 +1270,8 @@
                 else if (gameState.errorsCommitted > 0) supervisorComment = "Alguns deslizes, mas no geral foi bem. Precisamos de 100% de precisão.";
                 else supervisorComment = "Perfeito. É exatamente essa precisão que o sistema precisa.";
                 
-                if (gameState.currentDay === 6 && gameState.errorsCommitted > 1) {
-                    supervisorComment = "Você cedeu à pressão? Ou foi lento demais? De qualquer forma, a IA aprendeu com seus erros."
-                } else if (gameState.currentDay === 6 && gameState.errorsCommitted === 0) {
-                    supervisorComment = "Impressionante. Rápido, preciso e não cedeu à pressão. Excelente."
-                }
+                if (gameState.currentDay === 6 && gameState.errorsCommitted > 1) supervisorComment = "Você cedeu à pressão? Ou foi lento demais? De qualquer forma, a IA aprendeu com seus erros.";
+                else if (gameState.currentDay === 6 && gameState.errorsCommitted === 0) supervisorComment = "Impressionante. Rápido, preciso e não cedeu à pressão. Excelente.";
                 
                 document.getElementById('eod-comment').textContent = `"${supervisorComment}"`;
                 
@@ -1301,21 +1289,17 @@
                 gameContainer.style.filter = 'none';
                 eodReportEl.style.opacity = '0';
                 eodContentEl.style.transform = 'scale(0.95)';
-                
-                setTimeout(() => {
-                    eodReportEl.classList.add('hidden');
-                    const nextDay = gameState.currentDay + 1;
-                    gameState.ticketsProcessed = 0;
-                    gameState.errorsCommitted = 0;
-                    loadDay(nextDay);
-                }, 300);
-            }
+                eodReportEl.classList.add('hidden');
 
-            // --- Funções do Cronômetro ---
+                const nextDay = gameState.currentDay + 1;
+                gameState.ticketsProcessed = 0;
+                gameState.errorsCommitted = 0;
+                
+                loadDay(nextDay);
+            }
             
             function startTimer(totalTime) {
                 stopTimer();
-                
                 gameState.timeLeft = totalTime;
                 gameState.totalTime = totalTime;
                 timerBarContainer.classList.add('visible');
@@ -1324,10 +1308,7 @@
                 gameState.timerId = setInterval(() => {
                     gameState.timeLeft--;
                     updateTimerBar();
-                    
-                    if (gameState.timeLeft <= 0) {
-                        onTimeUp();
-                    }
+                    if (gameState.timeLeft <= 0) onTimeUp();
                 }, 1000);
             }
             
@@ -1342,54 +1323,44 @@
             function updateTimerBar() {
                 const percentage = (gameState.timeLeft / gameState.totalTime) * 100;
                 timerBar.style.width = `${percentage}%`;
-                
                 timerBar.classList.remove('warning', 'danger');
-                if (percentage < 25) {
-                    timerBar.classList.add('danger');
-                } else if (percentage < 50) {
-                    timerBar.classList.add('warning');
-                }
+                if (percentage < 25) timerBar.classList.add('danger');
+                else if (percentage < 50) timerBar.classList.add('warning');
             }
             
             function onTimeUp() {
                 stopTimer();
                 if (gameState.processing) return;
-                
                 console.log("TEMPO ESGOTADO!");
-                
                 gameState.processing = true;
                 gameState.errorsCommitted++;
                 gameState.ticketsProcessed++;
                 
-                showFeedback(false, 'reject', "ERRO: Tempo Esgotado! Decisão automática.");
+                // Erro por tempo = Reset Streak e Glitch
+                gameState.streak = 0;
+                currentTicketEl.classList.remove('streak-glow');
+                triggerGlitch();
+
+                showFeedback(false, 'reject', "⚠ ALERTA DE INSTABILIDADE: TIMEOUT DO SISTEMA ⚠");
                 addChatMessage('Supervisor', "Você demorou demais! Tive que intervir para não atrasar o hospital. Isso conta como um erro.", 'system');
-                
-                setTimeout(() => {
-                    loadNextTicket();
-                }, 2500);
+                setTimeout(() => loadNextTicket(), 2500);
             }
             
-            // --- Função do Relógio ---
             function updateClockDisplay() {
                 const baseTime = new Date();
-                baseTime.setHours(8, 0, 0, 0); // Inicia às 8:00 AM
+                baseTime.setHours(8, 0, 0, 0); 
                 baseTime.setMinutes(baseTime.getMinutes() + gameState.currentTimeInMinutes);
 
                 let hours = baseTime.getHours();
                 let minutes = baseTime.getMinutes();
                 const ampm = hours >= 12 ? 'PM' : 'AM';
-
                 hours = hours % 12;
-                hours = hours ? hours : 12; // '0' horas é '12' AM/PM
-                minutes = Math.floor(minutes); // Arredonda para baixo
+                hours = hours ? hours : 12; 
+                minutes = Math.floor(minutes); 
                 minutes = minutes < 10 ? '0' + minutes : minutes;
-
-                const timeString = `${hours}:${minutes} ${ampm}`;
-                gameTimeEl.textContent = timeString;
+                gameTimeEl.textContent = `${hours}:${minutes} ${ampm}`;
             }
 
-            // --- Funções do Tutorial ---
-            
             function setColumnFocus(left, center, right) {
                 colLeft.classList.toggle('column-blurred', !left);
                 colCenter.classList.toggle('column-blurred', !center);
@@ -1397,24 +1368,9 @@
             }
 
             function clearAllFocusPulses() {
-                document.querySelectorAll('.focus-pulse, .focus-pulse-buttons, .tab-pulse').forEach(el => {
-                    el.classList.remove('focus-pulse', 'focus-pulse-buttons', 'tab-pulse');
-                });
+                document.querySelectorAll('.focus-pulse, .focus-pulse-buttons, .tab-pulse').forEach(el => el.classList.remove('focus-pulse', 'focus-pulse-buttons', 'tab-pulse'));
             }
 
-            function typeTutorialMessages(messages, onAllComplete) {
-                let index = 0;
-                function nextMessage() {
-                    if (index < messages.length) {
-                        addChatMessage('Supervisor', messages[index], 'system', nextMessage);
-                        index++;
-                    } else {
-                        onAllComplete();
-                    }
-                }
-                nextMessage();
-            }
-            
             function runTutorialStep(step) {
                 gameState.tutorialStep = step;
                 console.log("Tutorial Step:", step);
@@ -1430,7 +1386,6 @@
                         ];
                         typeTutorialMessages(introMessages, () => runTutorialStep(2));
                         break;
-                    
                     case 2:
                         addChatMessage('Supervisor', "Primeiro, clique no primeiro ticket da sua fila (RI-1001) para analisá-lo.", 'system');
                         queueTitleEl.classList.add('focus-pulse');
@@ -1439,19 +1394,16 @@
                         if (firstTicketEl) {
                             firstTicketEl.addEventListener('click', () => {
                                 if (gameState.tutorialStep !== 2) return;
-                                initAudio();
                                 selectTicket(firstTicketEl.dataset.ticketId);
                                 clearAllFocusPulses();
                                 runTutorialStep(3);
                             }, { once: true });
                         }
                         break;
-                        
                     case 3:
                         setColumnFocus(false, true, false);
                         setTimeout(() => runTutorialStep(4), 3000); 
                         break;
-                        
                     case 4:
                         setColumnFocus(true, true, true); 
                         addChatMessage('Supervisor', "Ótimo. Agora, verifique o Manual de Regras para ver se o ticket está correto.", 'system', () => {
@@ -1464,37 +1416,39 @@
                             }, 3000);
                         });
                         break;
-                        
                     case 5:
                         setColumnFocus(true, true, true);
-                        addChatMessage('Supervisor', "Este ticket está correto. Aperte o botão verde [APROVADO] para processá-lo.", 'system');
+                        addChatMessage('Supervisor', "Este ticket está correto. Aperte o botão verde 'APROVAR' para processá-lo.", 'system');
                         actionButtonsEl.classList.add('focus-pulse-buttons');
                         break;
                 }
             }
+            
+            function typeTutorialMessages(messages, onAllComplete) {
+                let index = 0;
+                function nextMessage() {
+                    if (index < messages.length) {
+                        addChatMessage('Supervisor', messages[index], 'system', nextMessage);
+                        index++;
+                    } else {
+                        onAllComplete();
+                    }
+                }
+                nextMessage();
+            }
 
-
-            // --- 6. Event Listeners ---
             function setupEventListeners() {
-                
                 kbTabs.forEach(tab => {
                     tab.addEventListener('click', () => {
                         if (gameState.inTutorial && gameState.tutorialStep < 4) return;
-                        
                         const targetTab = tab.dataset.tab;
-                        
                         if (targetTab === 'regras') {
                             const indicator = rulesTabButton.querySelector('.new-rule-indicator');
                             if (indicator) indicator.remove();
                         }
-                        
-                        kbTabs.forEach(t => {
-                            t.classList.remove('active', 'bg-e0e7ff', 'text-indigo-700');
-                            t.classList.add('text-gray-500');
-                        });
-                        tab.classList.add('active', 'bg-e0e7ff', 'text-indigo-700');
+                        kbTabs.forEach(t => { t.classList.remove('active', 'bg-eef2ff', 'text-indigo-600'); t.classList.add('text-gray-500'); });
+                        tab.classList.add('active', 'bg-eef2ff', 'text-indigo-600');
                         tab.classList.remove('text-gray-500');
-                        
                         kbTabContents.forEach(c => c.classList.add('hidden'));
                         document.getElementById(`tab-content-${targetTab}`).classList.remove('hidden');
                     });
@@ -1508,37 +1462,27 @@
                     if (ticketEl) {
                         if (!gameState.inTutorial) {
                             document.querySelectorAll('#ticket-queue [data-ticket-id]').forEach(el => {
-                                el.classList.remove('border-l-4', 'border-indigo-500', 'bg-white');
-                                el.classList.add('bg-white/60');
+                                el.classList.remove('bg-blue-100', 'border-blue-300');
+                                el.classList.add('bg-white');
                             });
-                            
-                            ticketEl.classList.remove('bg-white/60');
-                            ticketEl.classList.add('border-l-4', 'border-indigo-500', 'bg-white');
-                            
+                            ticketEl.classList.remove('bg-white');
+                            ticketEl.classList.add('bg-blue-100', 'border-blue-300');
                             selectTicket(ticketEl.dataset.ticketId);
                         }
                     }
                 });
 
                 approveBtn.addEventListener('click', () => processDecision('approve'));
-                rejectBtn.addEventListener('click', () => {
-                    if (gameState.inTutorial) return;
-                    processDecision('reject');
-                });
-                
+                rejectBtn.addEventListener('click', () => { if (gameState.inTutorial) return; processDecision('reject'); });
                 eodNextDayBtn.addEventListener('click', hideEndOfDayReportAndLoadNext);
-                endGameRestartBtn.addEventListener('click', () => {
-                    location.reload(); // Reinicia o jogo
-                });
+                endGameRestartBtn.addEventListener('click', () => location.reload());
                 
                 currentTicketEl.addEventListener('click', (e) => {
                     if (gameState.inTutorial) return;
-                    
                     const fieldEl = e.target.closest('[data-field]');
                     if (fieldEl) {
                         const field = fieldEl.dataset.field;
                         let tabToPulse = '';
-                        
                         if (field === 'assinatura' || field === 'solicitante' || field === 'depto') tabToPulse = 'pessoal';
                         if (field === 'ativo') tabToPulse = 'ativos';
                         if (field === 'rollback' || field === 'risco' || field === 'urgencia' || field === 'impacto') tabToPulse = 'regras';
@@ -1555,7 +1499,6 @@
                 });
             }
             
-            // --- 7. Mecânica do Glossário ---
             function setupGlossaryTooltips(container) {
                 container.querySelectorAll('.tooltip[data-term]').forEach(el => {
                     const term = el.dataset.term;
@@ -1577,23 +1520,16 @@
 
             function updateGlossaryUI() {
                 if (gameState.discoveredTerms.size === 0) {
-                     glossaryContentEl.innerHTML = `<div class="text-xs text-gray-400 text-center italic mt-4">Termos serão adicionados aqui conforme você os descobre.</div>`;
+                      glossaryContentEl.innerHTML = `<div class="text-sm text-gray-500 text-center py-4 italic">Termos serão adicionados aqui conforme você os descobre.</div>`;
                     return;
                 }
                 glossaryContentEl.innerHTML = '';
                 Array.from(gameState.discoveredTerms).sort().forEach(term => {
                     const entry = document.createElement('div');
-                    entry.className = "mb-2 border-l-2 border-blue-400 pl-2";
-                    entry.innerHTML = `
-                        <dt class="font-bold text-blue-700 text-xs">${term}</dt>
-                        <dd class="text-xs text-gray-600">${GLOSSARY[term]}</dd>
-                    `;
+                    entry.innerHTML = `<dt class="font-bold text-blue-600 text-xs uppercase mb-1">${term}</dt><dd class="text-xs text-gray-600 ml-2 border-l-2 border-blue-100 pl-2 leading-relaxed">${GLOSSARY[term]}</dd>`;
                     glossaryContentEl.appendChild(entry);
                 });
             }
-
-            // --- 8. Iniciar o Jogo ---
-            initGame();
         });
     </script>
 </body>
